@@ -1,0 +1,10 @@
+{
+  "name": "grash",
+  "version": "1.0.2",
+  "description": "A useful library for 3D Graph Drawing and Visualization",
+  "main": "src/index.js",
+  "dependencies": {
+    "three": "^0.165.0"
+  },
+  "author": "Stojani"
+}
