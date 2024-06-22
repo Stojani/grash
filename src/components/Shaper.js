@@ -20,6 +20,7 @@ class Shaper {
     this.renderer.setClearColor(this.defaultBackgroundColor);
     this.container.appendChild(this.renderer.domElement);
     this.camera.position.z = 5;
+    this.autoRotateInterval = null;
 
     this.graph = new Graph(this.nodes, this.edges);
 
@@ -83,6 +84,34 @@ class Shaper {
   resetBackgroundColor() {
     this.scene.background = this.defaultBackgroundColor;
     this.renderer.setClearColor(this.defaultBackgroundColor);
+  }
+
+  rotateCamera() {
+    const radius = 5; // Raggio della rotazione
+    const speed = 0.5; // Velocità della rotazione
+
+    // Calcola la nuova posizione della camera
+    this.camera.position.x = radius * Math.cos(speed * Date.now() * 0.001);
+    this.camera.position.z = radius * Math.sin(speed * Date.now() * 0.001);
+
+    // La camera guarda sempre verso il centro della scena
+    this.camera.lookAt(this.scene.position);
+  }
+
+  autoRotateCamera() {
+    if (!this.autoRotateInterval) {
+      this.autoRotateInterval = setInterval(() => {
+        this.rotateCamera();
+        this.renderer.render(this.scene, this.camera);
+      }, 16); // 60 FPS
+    }
+  }
+
+  stopRotateCamera() {
+    if (this.autoRotateInterval) {
+      clearInterval(this.autoRotateInterval);
+      this.autoRotateInterval = null;
+    }
   }
 }
 
