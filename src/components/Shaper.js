@@ -30,6 +30,16 @@ class Shaper {
     });
     this.edges.forEach(edge => this.scene.add(edge.mesh));
 
+    // Aggiungi un piano per rappresentare la tavoletta
+    this.tabletGeometry = new THREE.PlaneGeometry(10, 10); // Dimensioni del piano
+    this.tabletMaterial = new THREE.MeshBasicMaterial({ color: 0x888888, side: THREE.DoubleSide }); // Colore del piano
+    this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
+    //this.tablet.rotation.x = Math.PI / 2; // Ruota il piano per essere orizzontale
+    //this.tablet.position.y = -1; // Posiziona il piano sotto i nodi
+    this.tablet.position.z = -1; // Posiziona il piano sulla parete di fronte
+    this.tablet.visible = false; // Inizialmente nascosto
+    this.scene.add(this.tablet);
+
     this.interactions = new GraphInteractions(this.camera, this.renderer);
     this.animate();
   }
@@ -112,6 +122,14 @@ class Shaper {
       clearInterval(this.autoRotateInterval);
       this.autoRotateInterval = null;
     }
+  }
+
+  showTablet() {
+    this.tablet.visible = true;
+  }
+
+  hideTablet() {
+    this.tablet.visible = false;
   }
 }
 
