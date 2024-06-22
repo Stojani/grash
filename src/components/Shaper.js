@@ -12,16 +12,19 @@ class Shaper {
 
   init() {
     this.scene = new THREE.Scene();
+    this.defaultBackgroundColor = new THREE.Color(0x000000);
+    this.scene.background = this.defaultBackgroundColor;
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setClearColor(this.defaultBackgroundColor);
     this.container.appendChild(this.renderer.domElement);
     this.camera.position.z = 5;
 
     this.graph = new Graph(this.nodes, this.edges);
 
     this.nodes.forEach(node => {
-      node.initialZ = node.mesh.position.z; // Salva la posizione Z iniziale
+      node.initialZ = node.mesh.position.z;
       this.scene.add(node.mesh);
     });
     this.edges.forEach(edge => this.scene.add(edge.mesh));
@@ -69,6 +72,17 @@ class Shaper {
       node.mesh.position.z = node.initialZ;
     });
     this.edges.forEach(edge => edge.updateGeometry());
+  }
+
+  setBackgroundColor(color) {
+    const newColor = new THREE.Color(color);
+    this.scene.background = newColor;
+    this.renderer.setClearColor(newColor);
+  }
+
+  resetBackgroundColor() {
+    this.scene.background = this.defaultBackgroundColor;
+    this.renderer.setClearColor(this.defaultBackgroundColor);
   }
 }
 
