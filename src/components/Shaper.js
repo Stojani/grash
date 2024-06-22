@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import Graph from '../model/Graph';
+import GraphInteractions from './GraphInteractions';
 
 class Shaper {
   constructor(container, nodes, edges) {
@@ -25,11 +26,13 @@ class Shaper {
     });
     this.edges.forEach(edge => this.scene.add(edge.mesh));
 
+    this.interactions = new GraphInteractions(this.camera, this.renderer);
     this.animate();
   }
 
   animate() {
     requestAnimationFrame(() => this.animate());
+    this.interactions.update();
     this.renderer.render(this.scene, this.camera);
   }
 
