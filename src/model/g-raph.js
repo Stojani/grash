@@ -15,7 +15,7 @@ class Graph {
   //highlightNode(node)
   //highlightEdge(edge)
   //highlight(nodes, edges)
-  //minimumCostPath(node1, node2) {}
+  //minimumCostPath(source, target) {}
 }
 
 export default Graph;

@@ -1,5 +1,5 @@
-import Node from '../model/Node';
-import Edge from '../model/Edge';
+import Node from '../model/n-ode';
+import Edge from '../model/e-dge';
 
 class Drawer {
   
@@ -13,13 +13,13 @@ class Drawer {
     });
   
     const edges = jsonData.edges.map(edgeData => {
-      const node1 = nodes.find(node => node.id === edgeData.node1);
-      const node2 = nodes.find(node => node.id === edgeData.node2);
-      if (!node1 || !node1.mesh || !node2 || !node2.mesh) {
+      const source = nodes.find(node => node.id === edgeData.source);
+      const target = nodes.find(node => node.id === edgeData.target);
+      if (!source || !source.mesh || !target || !target.mesh) {
         console.error(`Cannot create edge: one or both nodes are invalid.`);
         return null;
       }
-      return new Edge(node1, node2);
+      return new Edge(source, target);
     }).filter(edge => edge !== null);
   
     return { nodes, edges };

@@ -15,8 +15,8 @@ class GraphOperations {
       }
     }
   
-    static highlightEdge(edges, node1Id, node2Id, color = 'Yellow') {
-      const edge = edges.find(e => (e.node1.id === node1Id && e.node2.id === node2Id) || (e.node1.id === node2Id && e.node2.id === node1Id));
+    static highlightEdge(edges, sourceId, targetId, color = 'Yellow') {
+      const edge = edges.find(e => (e.source.id === sourceId && e.target.id === targetId) || (e.source.id === targetId && e.target.id === sourceId));
       if (edge) {
         edge.mesh.material.color.set(color);
       }

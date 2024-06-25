@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import Graph from '../model/Graph';
-import GraphInteractions from './GraphInteractions';
+import Graph from '../model/g-raph';
+import GraphInteractions from './graph-interactions';
 
 class Shaper {
   constructor(container, nodes, edges) {
