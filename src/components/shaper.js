@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import Graph from '../model/g-raph';
+import Graph from '../model/graph';
 import GraphInteractions from './graph-interactions';
 
 class Shaper {

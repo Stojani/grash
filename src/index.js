@@ -1,8 +1,8 @@
-import Graph from './model/g-raph';
-import Node from './model/n-ode';
-import Edge from './model/e-dge';
-import Shaper from './components/s-haper';
-import Drawer from './components/d-rawer';
+import Graph from './model/graph';
+import Node from './model/node';
+import Edge from './model/edge';
+import Shaper from './components/shaper';
+import Drawer from './components/drawer';
 import GraphOperations from './components/graph-operations';
 import GraphInteractions from './components/graph-interactions';
 

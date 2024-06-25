@@ -1,5 +1,5 @@
-import Node from '../model/n-ode';
-import Edge from '../model/e-dge';
+import Node from '../model/node';
+import Edge from '../model/edge';
 
 class Drawer {
   
