@@ -24,19 +24,6 @@ class Drawer {
   
     return { nodes, edges };
   }
-  /*
-  static fromJSON(json) {
-    const nodes = json.nodes.map(nodeData => new Node(nodeData));
-    const edges = json.edges.map(edgeData => {
-      const fromNode = nodes.find(node => node.id === edgeData.from);
-      const toNode = nodes.find(node => node.id === edgeData.to);
-      if (!fromNode || !toNode) {
-        throw new Error(`Invalid edge: ${edgeData.from} -> ${edgeData.to}`);
-      }
-      return new Edge(fromNode, toNode);
-    });
-    return { nodes, edges };
-  }*/
 
   static fromFile(fileContent) {
     const jsonData = JSON.parse(fileContent);
