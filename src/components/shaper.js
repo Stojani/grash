@@ -31,7 +31,7 @@ class Shaper {
     });
     this.edges.forEach(edge => this.scene.add(edge.mesh));
 
-    this.tabletGeometry = new THREE.PlaneGeometry(10, 10);
+    this.tabletGeometry = new THREE.PlaneGeometry(100, 100);
     this.tabletMaterial = new THREE.MeshBasicMaterial({ color: 0x888888, side: THREE.DoubleSide });
     this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
     this.tablet.position.z = -1;
@@ -46,9 +46,12 @@ class Shaper {
 
   initForceSimulation() {
     const simulation = forceSimulation(this.nodes)
-      .force('charge', forceManyBody().strength(-30))
+    .force('link', forceLink(this.edges)
+        .id(d => d.id)
+        .distance(8)
+      )
+      .force('charge', forceManyBody().strength(-1))
       .force('center', forceCenter(0, 0))
-      .force('link', forceLink(this.edges).id(d => d.id))
       .force('collide', forceCollide().radius(0.5))
       .on('tick', () => this.ticked());
 
@@ -117,7 +120,7 @@ class Shaper {
   }
 
   rotateCamera() {
-    const radius = 5;
+    const radius = 50;
     const speed = 0.5;
 
     this.camera.position.x = radius * Math.cos(speed * Date.now() * 0.001);

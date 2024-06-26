@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 class Edge {
-  static DEFAULT_COLOR = 'Grey';
+  static DEFAULT_COLOR = 'Light Gray';
   static DEFAULT_MATERIAL = new THREE.LineBasicMaterial({ color: Edge.DEFAULT_COLOR });
 
   constructor(source, target, material = Edge.DEFAULT_MATERIAL) {
