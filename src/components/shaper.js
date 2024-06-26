@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide } from 'd3-force';
 import Graph from '../model/graph';
 import GraphInteractions from './graph-interactions';
 
@@ -30,18 +31,37 @@ class Shaper {
     });
     this.edges.forEach(edge => this.scene.add(edge.mesh));
 
-    // Aggiungi un piano per rappresentare la tavoletta
-    this.tabletGeometry = new THREE.PlaneGeometry(10, 10); // Dimensioni del piano
-    this.tabletMaterial = new THREE.MeshBasicMaterial({ color: 0x888888, side: THREE.DoubleSide }); // Colore del piano
+    this.tabletGeometry = new THREE.PlaneGeometry(10, 10);
+    this.tabletMaterial = new THREE.MeshBasicMaterial({ color: 0x888888, side: THREE.DoubleSide });
     this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
-    //this.tablet.rotation.x = Math.PI / 2; // Ruota il piano per essere orizzontale
-    //this.tablet.position.y = -1; // Posiziona il piano sotto i nodi
-    this.tablet.position.z = -1; // Posiziona il piano sulla parete di fronte
-    this.tablet.visible = false; // Inizialmente nascosto
+    this.tablet.position.z = -1;
+    this.tablet.visible = false;
     this.scene.add(this.tablet);
 
     this.interactions = new GraphInteractions(this.camera, this.renderer);
+
+    this.initForceSimulation();
     this.animate();
+  }
+
+  initForceSimulation() {
+    const simulation = forceSimulation(this.nodes)
+      .force('charge', forceManyBody().strength(-30))
+      .force('center', forceCenter(0, 0))
+      .force('link', forceLink(this.edges).id(d => d.id))
+      .force('collide', forceCollide().radius(0.5))
+      .on('tick', () => this.ticked());
+
+    this.simulation = simulation;
+  }
+
+  ticked() {
+    this.nodes.forEach(node => {
+      node.mesh.position.x = node.x;
+      node.mesh.position.y = node.y;
+      node.mesh.position.z = node.z;
+    });
+    this.edges.forEach(edge => edge.updateGeometry());
   }
 
   animate() {
@@ -97,14 +117,12 @@ class Shaper {
   }
 
   rotateCamera() {
-    const radius = 5; // Raggio della rotazione
-    const speed = 0.5; // Velocità della rotazione
+    const radius = 5;
+    const speed = 0.5;
 
-    // Calcola la nuova posizione della camera
     this.camera.position.x = radius * Math.cos(speed * Date.now() * 0.001);
     this.camera.position.z = radius * Math.sin(speed * Date.now() * 0.001);
 
-    // La camera guarda sempre verso il centro della scena
     this.camera.lookAt(this.scene.position);
   }
 
@@ -113,7 +131,7 @@ class Shaper {
       this.autoRotateInterval = setInterval(() => {
         this.rotateCamera();
         this.renderer.render(this.scene, this.camera);
-      }, 16); // 60 FPS
+      }, 16);
     }
   }
 

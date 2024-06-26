@@ -2,7 +2,6 @@ import Node from '../model/node';
 import Edge from '../model/edge';
 
 class Drawer {
-  
   static fromJSON(jsonData) {
     const nodes = jsonData.nodes.map(nodeData => {
       const node = new Node(nodeData.id, nodeData.x, nodeData.y, nodeData.z, nodeData.color, nodeData.geometry);
@@ -11,7 +10,7 @@ class Drawer {
       }
       return node;
     });
-  
+
     const edges = jsonData.edges.map(edgeData => {
       const source = nodes.find(node => node.id === edgeData.source);
       const target = nodes.find(node => node.id === edgeData.target);
@@ -21,7 +20,7 @@ class Drawer {
       }
       return new Edge(source, target);
     }).filter(edge => edge !== null);
-  
+
     return { nodes, edges };
   }
 

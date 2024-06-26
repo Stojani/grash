@@ -4,10 +4,10 @@ class Edge {
   static DEFAULT_COLOR = 'Grey';
   static DEFAULT_MATERIAL = new THREE.LineBasicMaterial({ color: Edge.DEFAULT_COLOR });
 
-  constructor(source, target, value = 1, material = Edge.DEFAULT_MATERIAL) {
+  constructor(source, target, material = Edge.DEFAULT_MATERIAL) {
     this.source = source;
     this.target = target;
-    this.value = value;
+    //this.value = value;
     this.material = material;
     this.geometry = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(source.mesh.position.x, source.mesh.position.y, source.mesh.position.z),
