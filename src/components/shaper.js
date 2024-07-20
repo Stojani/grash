@@ -15,41 +15,58 @@ class Shaper {
     this.scene = new THREE.Scene();
     this.defaultBackgroundColor = new THREE.Color(0x000000);
     this.scene.background = this.defaultBackgroundColor;
+
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor(this.defaultBackgroundColor);
+    this.renderer.shadowMap.enabled = true;
     this.container.appendChild(this.renderer.domElement);
     this.camera.position.z = 5;
-    this.autoRotateInterval = null;
 
     this.graph = new Graph(this.nodes, this.edges);
 
     this.nodes.forEach(node => {
       node.initialZ = node.mesh.position.z;
+      node.mesh.castShadow = true;
+      node.mesh.receiveShadow = true;
       this.scene.add(node.mesh);
     });
+
     this.edges.forEach(edge => this.scene.add(edge.mesh));
 
     this.tabletGeometry = new THREE.PlaneGeometry(100, 100);
-    this.tabletMaterial = new THREE.MeshBasicMaterial({ color: 0x888888, side: THREE.DoubleSide });
+    this.tabletMaterial = new THREE.MeshPhongMaterial({ color: 0x888888, side: THREE.DoubleSide });
     this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
     this.tablet.position.z = -1;
     this.tablet.visible = false;
     this.scene.add(this.tablet);
 
     this.interactions = new GraphInteractions(this.camera, this.renderer);
+    this.addLights();
 
     this.initForceSimulation();
     this.animate();
   }
 
+  addLights() {
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    this.scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(1, 1, 1).normalize();
+    directionalLight.castShadow = true;
+    this.scene.add(directionalLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+    pointLight.position.set(5, 5, 5);
+    pointLight.castShadow = true;
+    this.scene.add(pointLight);
+  }
+
   initForceSimulation() {
     const simulation = forceSimulation(this.nodes)
-    .force('link', forceLink(this.edges)
-        .id(d => d.id)
-        .distance(8)
-      )
+      .force('link', forceLink(this.edges).id(d => d.id).distance(8))
       .force('charge', forceManyBody().strength(-1))
       .force('center', forceCenter(0, 0))
       .force('collide', forceCollide().radius(0.5))
@@ -119,30 +136,18 @@ class Shaper {
     this.renderer.setClearColor(this.defaultBackgroundColor);
   }
 
-  rotateCamera() {
-    const radius = 50;
-    const speed = 0.5;
-
-    this.camera.position.x = radius * Math.cos(speed * Date.now() * 0.001);
-    this.camera.position.z = radius * Math.sin(speed * Date.now() * 0.001);
-
-    this.camera.lookAt(this.scene.position);
-  }
-
   autoRotateCamera() {
-    if (!this.autoRotateInterval) {
-      this.autoRotateInterval = setInterval(() => {
-        this.rotateCamera();
-        this.renderer.render(this.scene, this.camera);
-      }, 16);
-    }
+    this.autoRotate = true;
+    this.renderer.setAnimationLoop(() => {
+      this.scene.rotation.y += 0.01;
+      this.renderer.render(this.scene, this.camera);
+    });
   }
 
   stopRotateCamera() {
-    if (this.autoRotateInterval) {
-      clearInterval(this.autoRotateInterval);
-      this.autoRotateInterval = null;
-    }
+    this.autoRotate = false;
+    this.renderer.setAnimationLoop(null);
+    this.animate();
   }
 
   showTablet() {
