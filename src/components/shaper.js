@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide } from 'd3-force';
 import Graph from '../model/graph';
 import GraphInteractions from './graph-interactions';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass';
 
 class Shaper {
   constructor(container, nodes, edges) {
@@ -28,6 +31,7 @@ class Shaper {
 
     this.nodes.forEach(node => {
       node.initialZ = node.mesh.position.z;
+      node.mesh.material = new THREE.MeshStandardMaterial({ color: node.color || 0xffffff, metalness: 0.5, roughness: 0.5 });
       node.mesh.castShadow = true;
       node.mesh.receiveShadow = true;
       this.scene.add(node.mesh);
@@ -44,6 +48,15 @@ class Shaper {
 
     this.interactions = new GraphInteractions(this.camera, this.renderer);
     this.addLights();
+
+    // Post-processing setup
+    /*
+    this.composer = new EffectComposer(this.renderer);
+    const renderPass = new RenderPass(this.scene, this.camera);
+    this.composer.addPass(renderPass);
+    const glitchPass = new GlitchPass();
+    this.composer.addPass(glitchPass);
+    */
 
     this.initForceSimulation();
     this.animate();
@@ -88,12 +101,14 @@ class Shaper {
     requestAnimationFrame(() => this.animate());
     this.interactions.update();
     this.renderer.render(this.scene, this.camera);
+    //this.composer.render();
   }
 
   setSize(width, height) {
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    //this.composer.setSize(width, height);
   }
 
   setZoom(zoom) {
