@@ -27,14 +27,12 @@ class Shaper {
     this.graph = new Graph(this.nodes, this.edges);
 
     this.nodes.forEach(node => {
-      node.initialZ = node.mesh.position.z;
-      node.mesh.material = new THREE.MeshStandardMaterial({ color: node.color || 0xffffff, metalness: 0.5, roughness: 0.5 });
-      node.mesh.castShadow = true;
-      node.mesh.receiveShadow = true;
       this.scene.add(node.mesh);
     });
 
-    this.edges.forEach(edge => this.scene.add(edge.mesh));
+    this.edges.forEach(edge => {
+      this.scene.add(edge.mesh);
+    });
 
     this.tabletGeometry = new THREE.PlaneGeometry(100, 100);
     this.tabletMaterial = new THREE.MeshPhongMaterial({ color: 0x888888, side: THREE.DoubleSide });

@@ -6,16 +6,16 @@ class Node {
 
   constructor(id, x = 0, y = 0, z = 0, color = Node.DEFAULT_COLOR, geometry = Node.DEFAULT_GEOMETRY) {
     this._id = id;
-    //this.info = info;
     this.x = x;
     this.y = y;
     this.z = z;
     this._color = color;
     this._geometry = geometry;
 
-    this.material = new THREE.MeshBasicMaterial({ color: this.color });
+    this.material = new THREE.MeshStandardMaterial({ color: this.color, metalness: 0.5, roughness: 0.5 });
     this.mesh = new THREE.Mesh(this._geometry, this.material);
     this.mesh.position.set(x, y, z);
+    this.mesh.scale.z = 0.5; // Schiaccia la sfera sull'asse z
 
     this.initialZ = z;
   }
@@ -47,8 +47,6 @@ class Node {
     this._geometry = newGeometry;
     this.mesh.geometry = newGeometry;
   }
-
-  //highlight() {}
 }
 
 export default Node;

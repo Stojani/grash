@@ -7,7 +7,6 @@ class Edge {
   constructor(source, target, material = Edge.DEFAULT_MATERIAL) {
     this.source = source;
     this.target = target;
-    //this.value = value;
     this.material = material;
     this.geometry = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(source.mesh.position.x, source.mesh.position.y, source.mesh.position.z),
@@ -21,7 +20,7 @@ class Edge {
       new THREE.Vector3(this.source.mesh.position.x, this.source.mesh.position.y, this.source.mesh.position.z),
       new THREE.Vector3(this.target.mesh.position.x, this.target.mesh.position.y, this.target.mesh.position.z)
     ]);
-    this.mesh.geometry = this.geometry;
+    this.mesh.geometry.attributes.position.needsUpdate = true;
   }
 }
 
