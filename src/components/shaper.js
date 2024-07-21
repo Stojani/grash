@@ -35,7 +35,7 @@ class Shaper {
     });
 
     this.tabletGeometry = new THREE.PlaneGeometry(100, 100);
-    this.tabletMaterial = new THREE.MeshPhongMaterial({ color: 0x888888, side: THREE.DoubleSide });
+    this.tabletMaterial = new THREE.MeshPhongMaterial({ color: 0xE6E6E6, side: THREE.DoubleSide });
     this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
     this.tablet.position.z = -1;
     this.tablet.visible = false;
