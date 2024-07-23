@@ -47,7 +47,7 @@ class Shaper {
     this.tablet.receiveShadow = false;
     this.scene.add(this.tablet);
 
-    this.interactions = new GraphInteractions(this.camera, this.renderer);
+    this.interactions = new GraphInteractions(this.camera, this.renderer, this.nodes);
     this.addLights();
 
     this.initForceSimulation();

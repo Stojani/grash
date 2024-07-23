@@ -1,10 +1,13 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
 
 class GraphInteractions {
-  constructor(camera, renderer) {
+  constructor(camera, renderer, nodes) {
     this.camera = camera;
     this.renderer = renderer;
+    this.nodes = nodes;
     this.controls = null;
+    this.selectedNode = null;
     this.initOrbitControls();
     this.addEventListeners();
   }
@@ -26,11 +29,38 @@ class GraphInteractions {
 
   addEventListeners() {
     this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
+    this.renderer.domElement.addEventListener('click', this.onClick.bind(this));
     window.addEventListener('resize', this.onWindowResize.bind(this), false);
   }
 
   onMouseMove(event) {
     this.controls.update();
+  }
+
+  onClick(event) {
+    const mouse = new THREE.Vector2();
+    mouse.x = (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = -(event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, this.camera);
+
+    const intersects = raycaster.intersectObjects(this.nodes.map(node => node.mesh));
+    if (intersects.length > 0) {
+      const selectedObject = intersects[0].object;
+      this.selectNode(selectedObject);
+    }
+  }
+
+  selectNode(nodeMesh) {
+    if (this.selectedNode) {
+      this.selectedNode.resetColor();
+    }
+    const selectedNode = this.nodes.find(node => node.mesh === nodeMesh);
+    if (selectedNode) {
+      selectedNode.highlight();
+      this.selectedNode = selectedNode;
+    }
   }
 
   update() {

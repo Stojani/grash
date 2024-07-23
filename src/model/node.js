@@ -18,6 +18,7 @@ class Node {
     this.mesh.scale.z = 0.5; // Schiaccia la sfera sull'asse z
 
     this.initialZ = z;
+    this.originalColor = this._color;
   }
 
   get id() {
@@ -46,6 +47,14 @@ class Node {
   set geometry(newGeometry) {
     this._geometry = newGeometry;
     this.mesh.geometry = newGeometry;
+  }
+
+  highlight() {
+    this.material.color.set('#ff0000'); // Cambia il colore a rosso quando selezionato
+  }
+
+  resetColor() {
+    this.material.color.set(this.originalColor); // Resetta al colore originale
   }
 }
 
