@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 class Edge {
-  static DEFAULT_COLOR = '#ffff66'; //yellow
+  static DEFAULT_COLOR = '#ffff66';// '#cccccc';  Very light grey   //'#ffff66'; //yellow
   static DEFAULT_MATERIAL = new THREE.MeshStandardMaterial({ 
     color: Edge.DEFAULT_COLOR, 
     transparent: true, 

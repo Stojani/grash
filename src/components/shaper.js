@@ -38,7 +38,7 @@ class Shaper {
       this.scene.add(edge.mesh);
     });
 
-    const tabletColor = '#cccccc'; // Very light grey
+    const tabletColor = '#cccccc'; // '#ffff66'; yellow   '#cccccc'; // Very light grey
     this.tabletGeometry = new THREE.BoxGeometry(100, 100, 0.5);
     this.tabletMaterial = new THREE.MeshPhongMaterial({ color: tabletColor, side: THREE.DoubleSide });
     this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
