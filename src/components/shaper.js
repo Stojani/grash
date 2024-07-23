@@ -34,10 +34,13 @@ class Shaper {
       this.scene.add(edge.mesh);
     });
 
-    this.tabletGeometry = new THREE.PlaneGeometry(100, 100);
-    this.tabletMaterial = new THREE.MeshPhongMaterial({ color: 0xE6E6E6, side: THREE.DoubleSide });
+    const tabletThickness = 0.5;
+    const tabletColor = '#cccccc'; //very light grey
+    this.tabletGeometry = new THREE.BoxGeometry(100, 100, tabletThickness);
+    this.tabletMaterial = new THREE.MeshPhongMaterial({ color: this.tabletColor, side: THREE.DoubleSide });
     this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
     this.tablet.position.z = -1;
+    //this.tablet.position.z = -tabletThickness / 2; // Posiziona la tavoletta in modo che sia centrata
     this.tablet.visible = false;
     this.scene.add(this.tablet);
 
