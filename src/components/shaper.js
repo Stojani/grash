@@ -27,21 +27,24 @@ class Shaper {
     this.graph = new Graph(this.nodes, this.edges);
 
     this.nodes.forEach(node => {
+      node.initialZ = node.mesh.position.z;
+      node.mesh.castShadow = false;
+      node.mesh.receiveShadow = false;
       this.scene.add(node.mesh);
     });
 
     this.edges.forEach(edge => {
+      edge.mesh.castShadow = false;
       this.scene.add(edge.mesh);
     });
 
-    const tabletThickness = 0.5;
-    const tabletColor = '#cccccc'; //very light grey
-    this.tabletGeometry = new THREE.BoxGeometry(100, 100, tabletThickness);
-    this.tabletMaterial = new THREE.MeshPhongMaterial({ color: this.tabletColor, side: THREE.DoubleSide });
+    const tabletColor = '#cccccc'; // Very light grey
+    this.tabletGeometry = new THREE.BoxGeometry(100, 100, 0.5);
+    this.tabletMaterial = new THREE.MeshPhongMaterial({ color: tabletColor, side: THREE.DoubleSide });
     this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
     this.tablet.position.z = -1;
-    //this.tablet.position.z = -tabletThickness / 2; // Posiziona la tavoletta in modo che sia centrata
     this.tablet.visible = false;
+    this.tablet.receiveShadow = false;
     this.scene.add(this.tablet);
 
     this.interactions = new GraphInteractions(this.camera, this.renderer);
@@ -55,15 +58,20 @@ class Shaper {
     const ambientLight = new THREE.AmbientLight(0x404040);
     this.scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(1, 1, 1).normalize();
-    directionalLight.castShadow = true;
-    this.scene.add(directionalLight);
+    this.directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    this.directionalLight.position.set(0, 0, 10); // Centra sugli assi x e y, distante 10 unità sull'asse z
+    this.directionalLight.castShadow = true;
+    this.scene.add(this.directionalLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-    pointLight.position.set(5, 5, 5);
-    pointLight.castShadow = true;
-    this.scene.add(pointLight);
+    // Configura le ombre proiettate dalla luce direzionale
+    this.directionalLight.shadow.mapSize.width = 2048; // Risoluzione della mappa delle ombre
+    this.directionalLight.shadow.mapSize.height = 2048;
+    this.directionalLight.shadow.camera.near = 0.5; // Impostazioni della telecamera per le ombre
+    this.directionalLight.shadow.camera.far = 50;
+    this.directionalLight.shadow.camera.left = -50;
+    this.directionalLight.shadow.camera.right = 50;
+    this.directionalLight.shadow.camera.top = 50;
+    this.directionalLight.shadow.camera.bottom = -50;
   }
 
   initForceSimulation() {
@@ -158,6 +166,30 @@ class Shaper {
 
   hideTablet() {
     this.tablet.visible = false;
+  }
+
+  enableShadows() {
+    //this.directionalLight.visible = true;
+    this.directionalLight.castShadow = true;
+    this.nodes.forEach(node => {
+      node.mesh.castShadow = true;
+    });
+    this.tablet.receiveShadow = true;
+    this.edges.forEach(edge => {
+      edge.mesh.castShadow = true;
+    });
+  }
+
+  disableShadows() {
+    //this.directionalLight.visible = false;
+    this.directionalLight.castShadow = false;
+    this.nodes.forEach(node => {
+      node.mesh.castShadow = false;
+    });
+    this.tablet.receiveShadow = false;
+    this.edges.forEach(edge => {
+      edge.mesh.castShadow = false;
+    });
   }
 }
 
