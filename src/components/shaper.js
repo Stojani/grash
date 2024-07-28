@@ -22,7 +22,7 @@ class Shaper {
     this.renderer.setClearColor(this.defaultBackgroundColor);
     this.renderer.shadowMap.enabled = true;
     this.container.appendChild(this.renderer.domElement);
-    this.camera.position.z = 5;
+    this.camera.position.z = 10;
 
     this.graph = new Graph(this.nodes, this.edges);
 
@@ -208,6 +208,12 @@ class Shaper {
     this.edges.forEach(edge => {
       edge.mesh.castShadow = false;
     });
+  }
+
+  setCameraPosition(x, y, z) {
+    if (!this.camera) return;
+    this.camera.position.set(x, y, z);
+    this.camera.updateProjectionMatrix();
   }
 
   destroy() {
