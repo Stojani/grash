@@ -59,14 +59,13 @@ class Shaper {
     this.scene.add(ambientLight);
 
     this.directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    this.directionalLight.position.set(0, 0, 10); // Centra sugli assi x e y, distante 10 unità sull'asse z
+    this.directionalLight.position.set(0, 0, 10);
     this.directionalLight.castShadow = true;
     this.scene.add(this.directionalLight);
 
-    // Configura le ombre proiettate dalla luce direzionale
-    this.directionalLight.shadow.mapSize.width = 2048; // Risoluzione della mappa delle ombre
+    this.directionalLight.shadow.mapSize.width = 2048; 
     this.directionalLight.shadow.mapSize.height = 2048;
-    this.directionalLight.shadow.camera.near = 0.5; // Impostazioni della telecamera per le ombre
+    this.directionalLight.shadow.camera.near = 0.5; 
     this.directionalLight.shadow.camera.far = 50;
     this.directionalLight.shadow.camera.left = -50;
     this.directionalLight.shadow.camera.right = 50;
@@ -190,6 +189,42 @@ class Shaper {
     this.edges.forEach(edge => {
       edge.mesh.castShadow = false;
     });
+  }
+
+  destroy() {
+    // Rimuovi gli oggetti dalla scena
+    while(this.scene.children.length > 0){ 
+      this.scene.remove(this.scene.children[0]); 
+    }
+
+    // Annulla l'animazione
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+
+    // Rimuovi gli ascoltatori di eventi
+    this.renderer.domElement.removeEventListener('mousemove', this.interactions.onMouseMove);
+    this.renderer.domElement.removeEventListener('click', this.interactions.onClick);
+    window.removeEventListener('resize', this.interactions.onWindowResize);
+
+    // Rimuovi il renderer dal DOM
+    this.container.removeChild(this.renderer.domElement);
+
+    // Rilascia le risorse di Three.js
+    this.renderer.dispose();
+
+    // Imposta a null le proprietà per il garbage collection
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    this.nodes = null;
+    this.edges = null;
+    this.graph = null;
+    this.interactions = null;
+    this.tablet = null;
+    this.tabletGeometry = null;
+    this.tabletMaterial = null;
+    this.directionalLight = null;
   }
 }
 

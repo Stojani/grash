@@ -15,7 +15,7 @@ class Node {
     this.material = new THREE.MeshStandardMaterial({ color: this.color, metalness: 0.5, roughness: 0.5 });
     this.mesh = new THREE.Mesh(this._geometry, this.material);
     this.mesh.position.set(x, y, z);
-    this.mesh.scale.z = 0.5; // Schiaccia la sfera sull'asse z
+    this.mesh.scale.z = 0.5;
 
     this.initialZ = z;
     this.originalColor = this._color;
@@ -50,11 +50,11 @@ class Node {
   }
 
   highlight() {
-    this.material.color.set('#ff0000'); // Cambia il colore a rosso quando selezionato
+    this.material.color.set('#ff0000'); //rosso
   }
 
   resetColor() {
-    this.material.color.set(this.originalColor); // Resetta al colore originale
+    this.material.color.set(this.originalColor);
   }
 }
 
