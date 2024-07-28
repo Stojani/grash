@@ -28,13 +28,8 @@ class GraphInteractions {
   }
 
   addEventListeners() {
-    this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.renderer.domElement.addEventListener('click', this.onClick.bind(this));
     window.addEventListener('resize', this.onWindowResize.bind(this), false);
-  }
-
-  onMouseMove(event) {
-    this.controls.update();
   }
 
   onClick(event) {
@@ -42,10 +37,14 @@ class GraphInteractions {
     mouse.x = (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
     mouse.y = -(event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
 
+    console.log(`Mouse coordinates: (${mouse.x}, ${mouse.y})`); // Debug: log mouse coordinates
+
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, this.camera);
 
     const intersects = raycaster.intersectObjects(this.nodes.map(node => node.mesh));
+    console.log(`Number of intersects: ${intersects.length}`); // Debug: log number of intersects
+
     if (intersects.length > 0) {
       const selectedObject = intersects[0].object;
       this.selectNode(selectedObject);
