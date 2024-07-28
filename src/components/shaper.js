@@ -48,18 +48,18 @@ class Shaper {
     this.scene.add(this.tablet);
 
     this.interactions = new GraphInteractions(this.camera, this.renderer, this.nodes);
-    this.addLights();
+    this.addLight(0,0,8);
 
     this.initForceSimulation();
     this.animate();
   }
 
-  addLights() {
+  addLight(x=0,y=0,z=0) {
     const ambientLight = new THREE.AmbientLight(0x404040);
     this.scene.add(ambientLight);
 
     this.directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    this.directionalLight.position.set(0, 0, 10);
+    this.directionalLight.position.set(x, y, z);
     this.directionalLight.castShadow = true;
     this.scene.add(this.directionalLight);
 
@@ -85,6 +85,7 @@ class Shaper {
   }
 
   ticked() {
+    if (!this.nodes || !this.edges) return;
     this.nodes.forEach(node => {
       node.mesh.position.x = node.x;
       node.mesh.position.y = node.y;
@@ -94,33 +95,42 @@ class Shaper {
   }
 
   animate() {
-    requestAnimationFrame(() => this.animate());
-    this.interactions.update();
-    this.renderer.render(this.scene, this.camera);
+    this.animationFrameId = requestAnimationFrame(() => this.animate());
+    if (this.interactions) {
+      this.interactions.update();
+    }
+    if (this.renderer && this.scene && this.camera) {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   setSize(width, height) {
+    if (!this.renderer || !this.camera) return;
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
   }
 
   setZoom(zoom) {
+    if (!this.camera) return;
     this.camera.zoom = zoom;
     this.camera.updateProjectionMatrix();
   }
 
   setMaxZoomIn(maxZoomIn) {
+    if (!this.camera) return;
     this.camera.near = maxZoomIn;
     this.camera.updateProjectionMatrix();
   }
 
   setMaxZoomOut(maxZoomOut) {
+    if (!this.camera) return;
     this.camera.far = maxZoomOut;
     this.camera.updateProjectionMatrix();
   }
 
   see2D() {
+    if (!this.nodes || !this.edges) return;
     this.nodes.forEach(node => {
       node.mesh.position.z = 0;
     });
@@ -128,6 +138,7 @@ class Shaper {
   }
 
   see3D() {
+    if (!this.nodes || !this.edges) return;
     this.nodes.forEach(node => {
       node.mesh.position.z = node.initialZ;
     });
@@ -135,40 +146,48 @@ class Shaper {
   }
 
   setBackgroundColor(color) {
+    if (!this.scene || !this.renderer) return;
     const newColor = new THREE.Color(color);
     this.scene.background = newColor;
     this.renderer.setClearColor(newColor);
   }
 
   resetBackgroundColor() {
+    if (!this.scene || !this.renderer) return;
     this.scene.background = this.defaultBackgroundColor;
     this.renderer.setClearColor(this.defaultBackgroundColor);
   }
 
   autoRotateCamera() {
+    if (!this.renderer) return;
     this.autoRotate = true;
     this.renderer.setAnimationLoop(() => {
-      this.scene.rotation.y += 0.01;
-      this.renderer.render(this.scene, this.camera);
+      if (this.scene) {
+        this.scene.rotation.y += 0.01;
+        this.renderer.render(this.scene, this.camera);
+      }
     });
   }
 
   stopRotateCamera() {
+    if (!this.renderer) return;
     this.autoRotate = false;
     this.renderer.setAnimationLoop(null);
     this.animate();
   }
 
   showTablet() {
+    if (!this.tablet) return;
     this.tablet.visible = true;
   }
 
   hideTablet() {
+    if (!this.tablet) return;
     this.tablet.visible = false;
   }
 
   enableShadows() {
-    //this.directionalLight.visible = true;
+    if (!this.directionalLight || !this.nodes || !this.edges || !this.tablet) return;
     this.directionalLight.castShadow = true;
     this.nodes.forEach(node => {
       node.mesh.castShadow = true;
@@ -180,7 +199,7 @@ class Shaper {
   }
 
   disableShadows() {
-    //this.directionalLight.visible = false;
+    if (!this.directionalLight || !this.nodes || !this.edges || !this.tablet) return;
     this.directionalLight.castShadow = false;
     this.nodes.forEach(node => {
       node.mesh.castShadow = false;
@@ -203,9 +222,11 @@ class Shaper {
     }
 
     // Rimuovi gli ascoltatori di eventi
-    this.renderer.domElement.removeEventListener('mousemove', this.interactions.onMouseMove);
-    this.renderer.domElement.removeEventListener('click', this.interactions.onClick);
-    window.removeEventListener('resize', this.interactions.onWindowResize);
+    if (this.interactions) {
+      this.renderer.domElement.removeEventListener('mousemove', this.interactions.onMouseMove);
+      this.renderer.domElement.removeEventListener('click', this.interactions.onClick);
+      window.removeEventListener('resize', this.interactions.onWindowResize);
+    }
 
     // Rimuovi il renderer dal DOM
     this.container.removeChild(this.renderer.domElement);
