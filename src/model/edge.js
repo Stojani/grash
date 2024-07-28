@@ -56,6 +56,13 @@ class Edge {
       this.source.mesh.parent.add(this.mesh);
     }
   }
+
+  set color(newColor) {
+    this.material.color.set(newColor);
+    if (this.mesh) {
+      this.mesh.material = this.material;
+    }
+  }
 }
 
 export default Edge;
