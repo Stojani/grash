@@ -1,10 +1,5 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 
 class GraphInteractions {
   constructor(camera, renderer, scene, nodes) {
@@ -15,12 +10,8 @@ class GraphInteractions {
     this.controls = null;
     this.selectedNode = null;
     this.hoveredNode = null;
-    this.composer = null;
-    this.outlinePass = null;
     this.raycaster = new THREE.Raycaster();
-    this.raycaster.params.Points.threshold = 0.1; // Aumenta questo valore se necessario
     this.initOrbitControls();
-    this.initPostProcessing();
     this.addEventListeners();
   }
 
@@ -37,25 +28,6 @@ class GraphInteractions {
     this.controls.maxDistance = 100;
     this.controls.enablePan = true;
     this.controls.screenSpacePanning = true;
-  }
-
-  initPostProcessing() {
-    this.composer = new EffectComposer(this.renderer);
-    const renderPass = new RenderPass(this.scene, this.camera);
-    this.composer.addPass(renderPass);
-
-    this.outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), this.scene, this.camera);
-    this.outlinePass.edgeStrength = 2.5;
-    this.outlinePass.edgeGlow = 0.0;
-    this.outlinePass.edgeThickness = 1.0;
-    this.outlinePass.pulsePeriod = 0;
-    this.outlinePass.visibleEdgeColor.set('#ffff00'); // Yellow color
-    this.outlinePass.hiddenEdgeColor.set('#190a05'); // Dark color
-    this.composer.addPass(this.outlinePass);
-
-    const effectFXAA = new ShaderPass(FXAAShader);
-    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
-    this.composer.addPass(effectFXAA);
   }
 
   addEventListeners() {
@@ -95,21 +67,6 @@ class GraphInteractions {
     }
   }
 
-  highlightNode(nodeMesh) {
-    if (this.hoveredNode !== nodeMesh) {
-      this.unhighlightNode();
-      this.hoveredNode = nodeMesh;
-      this.outlinePass.selectedObjects = [nodeMesh];
-    }
-  }
-
-  unhighlightNode() {
-    if (this.hoveredNode) {
-      this.outlinePass.selectedObjects = [];
-      this.hoveredNode = null;
-    }
-  }
-
   selectNode(nodeMesh) {
     if (this.selectedNode) {
       this.selectedNode.resetColor();
@@ -121,9 +78,26 @@ class GraphInteractions {
     }
   }
 
+  highlightNode(nodeMesh) {
+    if (this.hoveredNode && this.hoveredNode !== nodeMesh) {
+      this.hoveredNode.resetHoverHighlight();
+    }
+    const hoveredNode = this.nodes.find(node => node.mesh === nodeMesh);
+    if (hoveredNode) {
+      hoveredNode.hoverHighlight();
+      this.hoveredNode = hoveredNode;
+    }
+  }
+
+  unhighlightNode() {
+    if (this.hoveredNode) {
+      this.hoveredNode.resetHoverHighlight();
+      this.hoveredNode = null;
+    }
+  }
+
   update() {
     this.controls.update();
-    this.composer.render();
   }
 
   onWindowResize() {
@@ -133,12 +107,16 @@ class GraphInteractions {
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.composer.setSize(width, height);
   }
 
   removeMouseMovements() {
     this.disableMouseRotation();
     this.disableMousePanning();
+  }
+
+  restoreMouseMovements() {
+    this.enableMouseRotation();
+    this.enableMousePanning();
   }
 
   enableMouseRotation() {
