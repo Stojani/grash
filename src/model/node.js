@@ -56,6 +56,14 @@ class Node {
   resetColor() {
     this.material.color.set(this.originalColor);
   }
+
+  hoverHighlight() {
+    this.mesh.material.emissive.setHex(0xffff00); // Yellow emissive color for hover
+  }
+
+  resetHoverHighlight() {
+    this.mesh.material.emissive.setHex(0x000000); // Reset emissive color
+  }
 }
 
 export default Node;

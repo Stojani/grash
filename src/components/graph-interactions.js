@@ -17,6 +17,8 @@ class GraphInteractions {
     this.hoveredNode = null;
     this.composer = null;
     this.outlinePass = null;
+    this.raycaster = new THREE.Raycaster();
+    this.raycaster.params.Points.threshold = 0.1; // Aumenta questo valore se necessario
     this.initOrbitControls();
     this.initPostProcessing();
     this.addEventListeners();
@@ -67,10 +69,9 @@ class GraphInteractions {
     mouse.x = (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
     mouse.y = -(event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
 
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, this.camera);
+    this.raycaster.setFromCamera(mouse, this.camera);
 
-    const intersects = raycaster.intersectObjects(this.nodes.map(node => node.mesh));
+    const intersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
     if (intersects.length > 0) {
       const hoveredObject = intersects[0].object;
       this.highlightNode(hoveredObject);
@@ -85,14 +86,9 @@ class GraphInteractions {
     mouse.x = (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
     mouse.y = -(event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
 
-    console.log(`Mouse coordinates: (${mouse.x}, ${mouse.y})`); // Debug: log mouse coordinates
+    this.raycaster.setFromCamera(mouse, this.camera);
 
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, this.camera);
-
-    const intersects = raycaster.intersectObjects(this.nodes.map(node => node.mesh));
-    console.log(`Number of intersects: ${intersects.length}`); // Debug: log number of intersects
-    
+    const intersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
     if (intersects.length > 0) {
       const selectedObject = intersects[0].object;
       this.selectNode(selectedObject);
