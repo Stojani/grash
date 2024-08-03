@@ -47,7 +47,7 @@ class Shaper {
     this.tablet.receiveShadow = false;
     this.scene.add(this.tablet);
 
-    this.interactions = new GraphInteractions(this.camera, this.renderer, this.nodes);
+    this.interactions = new GraphInteractions(this.camera, this.renderer, this.scene, this.nodes);
     this.addLight(0,0,8);
 
     this.initForceSimulation();
@@ -266,6 +266,12 @@ class Shaper {
     this.tabletGeometry = null;
     this.tabletMaterial = null;
     this.directionalLight = null;
+  }
+
+  removeMouseMovements() {
+    if (this.interactions) {
+      this.interactions.removeMouseMovements();
+    }
   }
 }
 
