@@ -17,12 +17,12 @@ class Shaper {
     this.scene.background = this.defaultBackgroundColor;
 
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera.position.z = 15;
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor(this.defaultBackgroundColor);
     this.renderer.shadowMap.enabled = true;
     this.container.appendChild(this.renderer.domElement);
-    this.camera.position.z = 10;
 
     this.graph = new Graph(this.nodes, this.edges);
 
@@ -49,6 +49,10 @@ class Shaper {
 
     this.interactions = new GraphInteractions(this.camera, this.renderer, this.scene, this.nodes);
     this.addLight(0,0,8);
+
+    //useful for debug
+    //const axesHelper = new THREE.AxesHelper(15);
+    //this.scene.add(axesHelper);
 
     this.initForceSimulation();
     this.animate();

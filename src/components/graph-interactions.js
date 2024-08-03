@@ -37,9 +37,12 @@ class GraphInteractions {
   }
 
   onMouseMove(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y = -(event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    console.log('Mouse coordinates:', mouse);
 
     this.raycaster.setFromCamera(mouse, this.camera);
 
@@ -54,9 +57,10 @@ class GraphInteractions {
   }
 
   onClick(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y = -(event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
     this.raycaster.setFromCamera(mouse, this.camera);
 
@@ -67,19 +71,8 @@ class GraphInteractions {
     }
   }
 
-  selectNode(nodeMesh) {
-    if (this.selectedNode) {
-      this.selectedNode.resetColor();
-    }
-    const selectedNode = this.nodes.find(node => node.mesh === nodeMesh);
-    if (selectedNode) {
-      selectedNode.highlight();
-      this.selectedNode = selectedNode;
-    }
-  }
-
   highlightNode(nodeMesh) {
-    if (this.hoveredNode && this.hoveredNode !== nodeMesh) {
+    if (this.hoveredNode) {
       this.hoveredNode.resetHoverHighlight();
     }
     const hoveredNode = this.nodes.find(node => node.mesh === nodeMesh);
@@ -93,6 +86,17 @@ class GraphInteractions {
     if (this.hoveredNode) {
       this.hoveredNode.resetHoverHighlight();
       this.hoveredNode = null;
+    }
+  }
+
+  selectNode(nodeMesh) {
+    if (this.selectedNode) {
+      this.selectedNode.resetColor();
+    }
+    const selectedNode = this.nodes.find(node => node.mesh === nodeMesh);
+    if (selectedNode) {
+      selectedNode.highlight();
+      this.selectedNode = selectedNode;
     }
   }
 
