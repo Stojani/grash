@@ -63,6 +63,12 @@ class Edge {
       this.mesh.material = this.material;
     }
   }
+
+  removeFromScene(scene) {
+    scene.remove(this.mesh);
+    this.mesh.geometry.dispose();
+    this.mesh.material.dispose();
+  }
 }
 
 export default Edge;

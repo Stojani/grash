@@ -47,7 +47,7 @@ class Shaper {
     this.tablet.receiveShadow = false;
     this.scene.add(this.tablet);
 
-    this.interactions = new GraphInteractions(this.camera, this.renderer, this.scene, this.nodes);
+    this.interactions = new GraphInteractions(this.camera, this.renderer, this.scene, this.nodes, this.edges);
     this.addLight(0,0,8);
 
     //useful for debug
@@ -276,6 +276,10 @@ class Shaper {
     if (this.interactions) {
       this.interactions.removeMouseMovements();
     }
+  }
+
+  removeSelectedNodes() {
+    this.interactions.removeSelectedNodes();
   }
 }
 

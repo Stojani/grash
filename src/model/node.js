@@ -50,7 +50,11 @@ class Node {
   }
 
   highlight() {
-    this.material.color.set('#ff0000'); //rosso
+    this.mesh.material.color.set('#ff0000'); // Red
+  }
+
+  unhighlight() {
+    this.mesh.material.color.set(this.originalColor); // Reset to default color
   }
 
   resetColor() {
@@ -63,6 +67,12 @@ class Node {
 
   resetHoverHighlight() {
     this.mesh.material.emissive.setHex(0x000000); // Reset emissive color
+  }
+
+  removeFromScene(scene) {
+    scene.remove(this.mesh);
+    this.mesh.geometry.dispose();
+    this.mesh.material.dispose();
   }
 }
 

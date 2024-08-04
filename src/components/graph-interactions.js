@@ -2,12 +2,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three';
 
 class GraphInteractions {
-  constructor(camera, renderer, scene, nodes) {
+  constructor(camera, renderer, scene, nodes, edges) {
     this.camera = camera;
     this.renderer = renderer;
     this.scene = scene;
     this.nodes = nodes;
+    this.edges = edges;
     this.controls = null;
+    this.selectedNodes = [];
     this.selectedNode = null;
     this.hoveredNode = null;
     this.raycaster = new THREE.Raycaster();
@@ -42,7 +44,7 @@ class GraphInteractions {
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    console.log('Mouse coordinates:', mouse);
+    //console.log('Mouse coordinates:', mouse);
 
     this.raycaster.setFromCamera(mouse, this.camera);
 
@@ -90,13 +92,16 @@ class GraphInteractions {
   }
 
   selectNode(nodeMesh) {
-    if (this.selectedNode) {
-      this.selectedNode.resetColor();
-    }
     const selectedNode = this.nodes.find(node => node.mesh === nodeMesh);
     if (selectedNode) {
-      selectedNode.highlight();
-      this.selectedNode = selectedNode;
+      const index = this.selectedNodes.indexOf(selectedNode);
+      if (index === -1) {
+        selectedNode.highlight();
+        this.selectedNodes.push(selectedNode);
+      } else {
+        selectedNode.resetColor();
+        this.selectedNodes.splice(index, 1);
+      }
     }
   }
 
@@ -137,6 +142,39 @@ class GraphInteractions {
 
   disableMousePanning() {
     this.controls.enablePan = false;
+  }
+
+  removeNode(nodeMesh) {
+    //console.log('entra 2');
+    const nodeToRemove = this.nodes.find(node => node.mesh === nodeMesh);
+    if (nodeToRemove) {
+      // Remove edges associated with the node
+      const edgesToRemove = this.edges.filter(edge => edge.source === nodeToRemove || edge.target === nodeToRemove);
+      edgesToRemove.forEach(edge => {
+        edge.removeFromScene(this.scene);
+        this.edges = this.edges.filter(e => e !== edge);
+      });
+
+      // Remove node from the scene
+      nodeToRemove.removeFromScene(this.scene);
+      this.nodes = this.nodes.filter(node => node !== nodeToRemove);
+
+      // If the removed node was selected or hovered, reset the selection and hover states
+      if (this.selectedNode === nodeToRemove) {
+        this.selectedNode = null;
+      }
+      if (this.hoveredNode === nodeToRemove) {
+        this.hoveredNode = null;
+      }
+    }
+  }
+
+  removeSelectedNodes() {
+    // Copia l'array dei nodi selezionati per evitare problemi durante l'iterazione
+    const nodesToRemove = [...this.selectedNodes];
+    nodesToRemove.forEach(node => {
+      this.removeNode(node.mesh);
+    });
   }
 }
 
