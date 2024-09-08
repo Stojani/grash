@@ -1,10 +1,10 @@
-import Graph from './model/graph';
-import Node from './model/node';
-import Edge from './model/edge';
-import Shaper from './components/shaper';
-import Drawer from './components/drawer';
-import GraphOperations from './components/graph-operations';
-import GraphInteractions from './components/graph-interactions';
+import Graph from './model/Graph';
+import Node from './model/Node';
+import Edge from './model/Edge';
+import Shaper from './components/Shaper';
+import Drawer from './components/Drawer';
+import GraphOperations from './components/GraphOperations';
+import GraphInteractions from './components/GraphInteractions';
 
 export {
     Graph,

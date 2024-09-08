@@ -1,5 +1,5 @@
-import Node from '../model/node';
-import Edge from '../model/edge';
+import Node from '../model/Node';
+import Edge from '../model/Edge';
 
 class Drawer {
   static fromJSON(jsonData) {

@@ -25,7 +25,7 @@ class Edge {
     // Cylinder geometry: small radius, height as distance between nodes
     const edgeGeometry = new THREE.CylinderGeometry(0.02, 0.02, distance, 10);
 
-    // Remove previous mesh if exists
+    // Rimuovi la vecchia geometria
     if (this.mesh) {
       this.mesh.geometry.dispose();
       this.mesh.material.dispose();
@@ -36,22 +36,22 @@ class Edge {
 
     this.mesh = new THREE.Mesh(edgeGeometry, this.material);
 
-    // Position the cylinder at the midpoint
+    // Posiziona il cilindro a metà tra start e end
     const midPoint = start.clone().add(end).multiplyScalar(0.5);
     this.mesh.position.copy(midPoint);
 
-    // Align the cylinder with the line between start and end
+    // Allinea il cilindro con la linea tra start e end
     const orientation = new THREE.Matrix4();
     orientation.lookAt(start, end, new THREE.Vector3(0, 1, 0));
     this.mesh.quaternion.setFromRotationMatrix(orientation);
 
-    // Rotate the cylinder 90 degrees around its Y axis
+    // Ruota il cilindro di 90 gradi sull'asse Y
     this.mesh.rotateX(Math.PI / 2);
 
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
 
-    // Make sure the edge is visible by adding it to the scene
+    // Assicurati che l'arco sia visibile aggiungendolo alla scena
     if (this.source.mesh.parent) {
       this.source.mesh.parent.add(this.mesh);
     }
@@ -65,9 +65,11 @@ class Edge {
   }
 
   removeFromScene(scene) {
-    scene.remove(this.mesh);
-    this.mesh.geometry.dispose();
-    this.mesh.material.dispose();
+    if (this.mesh && this.mesh.parent) {
+      scene.remove(this.mesh);
+      this.mesh.geometry.dispose(); // Rilascia la geometria dell'arco
+      this.mesh.material.dispose(); // Rilascia il materiale dell'arco
+    }
   }
 }
 

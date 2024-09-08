@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide } from 'd3-force';
-import Graph from '../model/graph';
-import GraphInteractions from './graph-interactions';
+import Graph from '../model/Graph';
+import GraphInteractions from './GraphInteractions';
 
 class Shaper {
   constructor(container, nodes, edges) {
@@ -88,15 +88,36 @@ class Shaper {
     this.simulation = simulation;
   }
 
-  ticked() {
-    if (!this.nodes || !this.edges) return;
-    this.nodes.forEach(node => {
-      node.mesh.position.x = node.x;
-      node.mesh.position.y = node.y;
-      node.mesh.position.z = node.z;
-    });
-    this.edges.forEach(edge => edge.updateGeometry());
-  }
+  updateSimulation() {
+    if (this.simulation) {
+      this.simulation.stop(); // Ferma la simulazione corrente
+    }
+
+    // Crea una nuova simulazione con i nodi e archi rimanenti
+    this.simulation = forceSimulation(this.nodes)
+      .force('link', forceLink(this.edges).id(d => d.id).distance(8))
+      .force('charge', forceManyBody().strength(-1))
+      .force('center', forceCenter(0, 0))
+      .force('collide', forceCollide().radius(0.5))
+      .on('tick', () => this.ticked());
+
+    // Riavvia la simulazione forzando un nuovo calcolo
+    this.simulation.alpha(1).restart();
+}
+
+ticked() {
+  if (!this.nodes || !this.edges) return;
+
+  // Aggiorna le posizioni dei nodi
+  this.nodes.forEach(node => {
+    node.mesh.position.x = node.x;
+    node.mesh.position.y = node.y;
+    node.mesh.position.z = node.z;
+  });
+
+  // Aggiorna la geometria degli archi
+  this.edges.forEach(edge => edge.updateGeometry());
+}
 
   animate() {
     this.animationFrameId = requestAnimationFrame(() => this.animate());
@@ -279,7 +300,8 @@ class Shaper {
   }
 
   removeSelectedNodes() {
-    this.interactions.removeSelectedNodes();
+    this.interactions.removeSelectedNodes(); // Rimuovi i nodi selezionati e i loro archi
+    this.updateSimulation(); // Aggiorna la simulazione
   }
 }
 
