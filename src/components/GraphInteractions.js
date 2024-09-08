@@ -149,29 +149,29 @@ class GraphInteractions {
     if (nodeToRemove) {
       // Trova e rimuovi tutti gli archi collegati a questo nodo
       const edgesToRemove = this.edges.filter(edge => edge.source === nodeToRemove || edge.target === nodeToRemove);
-
+  
       edgesToRemove.forEach(edge => {
-        // Rimuovi ogni arco dalla scena e libera le risorse
+        // Rimuovi l'arco dalla scena e libera le risorse
         if (edge.mesh && edge.mesh.parent) {
           edge.mesh.parent.remove(edge.mesh);
           edge.mesh.geometry.dispose(); // Rilascia la geometria dell'arco
           edge.mesh.material.dispose(); // Rilascia il materiale dell'arco
         }
       });
-
-      // Aggiorna l'array degli archi, rimuovendo quelli collegati al nodo eliminato
+  
+      // Aggiorna l'array degli archi rimuovendo quelli collegati al nodo eliminato
       this.edges = this.edges.filter(edge => !edgesToRemove.includes(edge));
-
+  
       // Rimuovi il nodo dalla scena
       if (nodeToRemove.mesh && nodeToRemove.mesh.parent) {
         nodeToRemove.mesh.parent.remove(nodeToRemove.mesh);
         nodeToRemove.mesh.geometry.dispose(); // Rilascia la geometria del nodo
         nodeToRemove.mesh.material.dispose(); // Rilascia il materiale del nodo
       }
-
+  
       // Aggiorna l'array dei nodi
       this.nodes = this.nodes.filter(node => node !== nodeToRemove);
-
+  
       // Resetta lo stato di selezione ed evidenziazione se necessario
       this.selectedNodes = this.selectedNodes.filter(node => node !== nodeToRemove);
       if (this.hoveredNode === nodeToRemove) {
@@ -183,18 +183,9 @@ class GraphInteractions {
   removeSelectedNodes() {
     const nodesToRemove = [...this.selectedNodes];
     nodesToRemove.forEach(node => {
-      this.removeNode(node.mesh); // Rimuove il nodo selezionato e gli archi collegati
+      this.removeNode(node.mesh);
     });
-    this.selectedNodes = []; // Resetta i nodi selezionati
-  }
-
-  removeSelectedNodes() {
-    const nodesToRemove = [...this.selectedNodes];
-    nodesToRemove.forEach(node => {
-      this.removeNode(node.mesh); // Rimuove il nodo selezionato e gli archi collegati
-    });
-    this.selectedNodes = []; // Resetta i nodi selezionati
-    this.scene.updateSimulation(); // Aggiorna la simulazione dopo la rimozione dei nodi
+    this.selectedNodes = [];
   }
 }
 

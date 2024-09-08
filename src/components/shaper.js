@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide } from 'd3-force';
+import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide, forceRadial } from 'd3-force';
 import Graph from '../model/Graph';
 import GraphInteractions from './GraphInteractions';
 
@@ -83,41 +83,65 @@ class Shaper {
       .force('charge', forceManyBody().strength(-1))
       .force('center', forceCenter(0, 0))
       .force('collide', forceCollide().radius(0.5))
+      .force('attract', forceRadial(0, 0, 0).strength(0.1))
       .on('tick', () => this.ticked());
 
     this.simulation = simulation;
   }
 
-  updateSimulation() {
+  stopSimulation() {
     if (this.simulation) {
-      this.simulation.stop(); // Ferma la simulazione corrente
+      this.simulation.stop();
+    }
+  }
+
+  updateSimulation() {
+    //this.stopSimulation();
+  
+    // Non riavviare la simulazione se è già stabile (alpha è vicino a 0)
+    //
+    /*if (this.simulation.alpha() < 0.05) {
+      console.log('La simulazione è già stabile. Nessun aggiornamento necessario.');
+      return;
+    }*/
+
+    // Verifica se ci sono nodi ed archi da utilizzare per la simulazione
+    if (this.nodes.length === 0 || this.edges.length === 0) {
+      console.warn('No nodes or edges available for simulation.');
+      return;
     }
 
-    // Crea una nuova simulazione con i nodi e archi rimanenti
+    // Inizializza nuovamente la simulazione con i nodi e archi aggiornati
     this.simulation = forceSimulation(this.nodes)
-      .force('link', forceLink(this.edges).id(d => d.id).distance(8))
-      .force('charge', forceManyBody().strength(-1))
-      .force('center', forceCenter(0, 0))
-      .force('collide', forceCollide().radius(0.5))
+      .force('link', forceLink(this.edges).id(d => d.id).distance(8)) // Aggiorna il link con gli archi rimasti
+      .force('charge', forceManyBody().strength(-10).distanceMax(50))  // Riduci la forza e limita la distanza
+      .force('center', forceCenter(0, 0))                              // Mantieni il centro
+      .force('collide', forceCollide().radius(0.5))                    // Mantieni la forza di collisione
       .on('tick', () => this.ticked());
+  
+    // Forza il riavvio della simulazione
+    //this.simulation.alpha(1).restart();
+  }
 
-    // Riavvia la simulazione forzando un nuovo calcolo
-    this.simulation.alpha(1).restart();
-}
+  updateGraphSimulation() {
+    this.simulation.nodes(this.nodes);
+    this.simulation.force("link").links(this.edges);
+  
+    // Rende il grafo reattivo senza riavvio drastico
+    this.simulation.alpha(0.1).restart();
+  }
 
-ticked() {
-  if (!this.nodes || !this.edges) return;
-
-  // Aggiorna le posizioni dei nodi
-  this.nodes.forEach(node => {
-    node.mesh.position.x = node.x;
-    node.mesh.position.y = node.y;
-    node.mesh.position.z = node.z;
-  });
-
-  // Aggiorna la geometria degli archi
-  this.edges.forEach(edge => edge.updateGeometry());
-}
+  ticked() {
+    if (!this.nodes || !this.edges) return;
+    
+    this.nodes.forEach(node => {
+      node.mesh.position.x = node.x;
+      node.mesh.position.y = node.y;
+      node.mesh.position.z = node.z;
+    });
+  
+    this.edges.forEach(edge => edge.updateGeometry());
+  }
 
   animate() {
     this.animationFrameId = requestAnimationFrame(() => this.animate());
@@ -300,8 +324,13 @@ ticked() {
   }
 
   removeSelectedNodes() {
-    this.interactions.removeSelectedNodes(); // Rimuovi i nodi selezionati e i loro archi
-    this.updateSimulation(); // Aggiorna la simulazione
+    //this.stopSimulation();
+
+    this.interactions.removeSelectedNodes();
+    this.nodes = this.interactions.nodes;
+    this.edges = this.interactions.edges;
+
+    this.updateGraphSimulation();
   }
 }
 
