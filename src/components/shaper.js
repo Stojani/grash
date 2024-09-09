@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide, forceRadial } from 'd3-force';
 import Graph from '../model/Graph';
 import GraphInteractions from './GraphInteractions';
+import Node from '../model/Node';
 
 class Shaper {
   constructor(container, nodes, edges) {
@@ -331,6 +332,27 @@ class Shaper {
     this.edges = this.interactions.edges;
 
     this.updateGraphSimulation();
+  }
+
+  addNode(x = 0, y = 0, z = 0) {
+    const existingIds = this.nodes.map(node => parseInt(node.id, 10)).filter(id => !isNaN(id));
+    existingIds.sort((a, b) => a - b);
+  
+    let newId = existingIds.length ? existingIds[existingIds.length - 1] + 1 : 1;
+    for (let i = 0; i < existingIds.length; i++) {
+      if (existingIds[i] !== i + 1) {
+        newId = i + 1;
+        break;
+      }
+    }
+  
+    const newNode = new Node(newId.toString(), x, y, z);
+    this.nodes.push(newNode);
+    this.scene.add(newNode.mesh);
+  
+    this.updateGraphSimulation();
+  
+    return newNode;
   }
 }
 
