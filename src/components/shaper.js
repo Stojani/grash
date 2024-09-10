@@ -3,6 +3,7 @@ import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide, f
 import Graph from '../model/Graph';
 import GraphInteractions from './GraphInteractions';
 import Node from '../model/Node';
+import Edge from '../model/Edge';
 
 class Shaper {
   constructor(container, nodes, edges) {
@@ -128,7 +129,6 @@ class Shaper {
     this.simulation.nodes(this.nodes);
     this.simulation.force("link").links(this.edges);
   
-    // Rende il grafo reattivo senza riavvio drastico
     this.simulation.alpha(0.1).restart();
   }
 
@@ -366,6 +366,35 @@ class Shaper {
     this.updateGraphSimulation();
   
     return newNode;
+  }
+
+  addEdge(sourceNode, targetNode) {
+    // Verifica che i nodi siano validi
+    if (!sourceNode || !targetNode) {
+      console.warn("Uno o entrambi i nodi sono null.");
+      return;
+    }
+
+    // Verifica che l'arco non esista già tra i due nodi
+    const existingEdge = this.edges.find(edge => 
+      (edge.source === sourceNode && edge.target === targetNode) || 
+      (edge.source === targetNode && edge.target === sourceNode)
+    );
+
+    if (existingEdge) {
+      console.warn("L'arco tra questi nodi esiste già.");
+      return;
+    }
+
+    // Crea un nuovo arco (Edge) tra i due nodi
+    const newEdge = new Edge(sourceNode, targetNode);
+
+    // Aggiungi l'arco alla scena
+    this.edges.push(newEdge);
+    this.scene.add(newEdge.mesh);
+
+    // Aggiorna la simulazione per considerare il nuovo arco
+    this.updateGraphSimulation();
   }
 }
 
