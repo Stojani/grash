@@ -134,15 +134,28 @@ class Shaper {
 
   ticked() {
     if (!this.nodes || !this.edges) return;
-    
+
     this.nodes.forEach(node => {
       node.mesh.position.x = node.x;
       node.mesh.position.y = node.y;
       node.mesh.position.z = node.z;
     });
-  
+
     this.edges.forEach(edge => edge.updateGeometry());
-  }
+
+    /*
+    if (this.interactions.nodeInfoPopUp) {
+      this.interactions.nodeInfoPopUp.position.copy(this.interactions.selectedNode.mesh.position);
+      this.interactions.nodeInfoPopUp.position.z += 1.5;
+    }
+    if (this.popup && this.selectedNode) {
+        // Mantieni il popup leggermente spostato rispetto al nodo selezionato
+        this.popup.position.copy(this.selectedNode.mesh.position);
+        this.popup.position.x += 0.5; // Mantieni l'offset a destra
+        this.popup.position.y += 1.5; // Mantieni l'offset sopra
+    }
+    */
+}
 
   animate() {
     this.animationFrameId = requestAnimationFrame(() => this.animate());
