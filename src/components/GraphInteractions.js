@@ -211,53 +211,53 @@ class GraphInteractions {
     
   }
 
-createTextTexture(text) {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  const lines = text.split('\n'); // Dividi il testo in righe
+  createTextTexture(text) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const lines = text.split('\n'); // Dividi il testo in righe
 
-  const fontSize = 14; // Dimensione ridotta del testo
-  const lineHeight = fontSize * 1.2;
-  const padding = 8; // Riduciamo il padding
+    const fontSize = 14; // Dimensione ridotta del testo
+    const lineHeight = fontSize * 1.2;
+    const padding = 8; // Riduciamo il padding
 
-  // Calcoliamo la larghezza massima e l'altezza totale del testo
-  const maxWidth = Math.max(...lines.map(line => context.measureText(line).width)) + padding * 2;
-  const totalHeight = lineHeight * lines.length + padding * 2;
+    // Calcoliamo la larghezza massima e l'altezza totale del testo
+    const maxWidth = Math.max(...lines.map(line => context.measureText(line).width)) + padding * 2;
+    const totalHeight = lineHeight * lines.length + padding * 2;
 
-  // Miglioriamo la risoluzione del canvas
-  const scaleFactor = 3; // Fattore di scala maggiore per alta risoluzione
-  canvas.width = maxWidth * scaleFactor;
-  canvas.height = totalHeight * scaleFactor;
-  context.scale(scaleFactor, scaleFactor);
+    // Miglioriamo la risoluzione del canvas
+    const scaleFactor = 3; // Fattore di scala maggiore per alta risoluzione
+    canvas.width = maxWidth * scaleFactor;
+    canvas.height = totalHeight * scaleFactor;
+    context.scale(scaleFactor, scaleFactor);
 
-  // Disegniamo la "nuvoletta" senza la punta
-  context.beginPath();
-  context.moveTo(padding, padding);
-  context.lineTo(maxWidth - padding, padding);
-  context.quadraticCurveTo(maxWidth, padding, maxWidth, padding * 2);
-  context.lineTo(maxWidth, totalHeight - padding);
-  context.quadraticCurveTo(maxWidth, totalHeight, maxWidth - padding, totalHeight);
-  context.lineTo(padding, totalHeight);
-  context.quadraticCurveTo(0, totalHeight, 0, totalHeight - padding);
-  context.lineTo(0, padding * 2);
-  context.quadraticCurveTo(0, padding, padding, padding);
-  context.closePath();
+    // Disegniamo la "nuvoletta" senza la punta
+    context.beginPath();
+    context.moveTo(padding, padding);
+    context.lineTo(maxWidth - padding, padding);
+    context.quadraticCurveTo(maxWidth, padding, maxWidth, padding * 2);
+    context.lineTo(maxWidth, totalHeight - padding);
+    context.quadraticCurveTo(maxWidth, totalHeight, maxWidth - padding, totalHeight);
+    context.lineTo(padding, totalHeight);
+    context.quadraticCurveTo(0, totalHeight, 0, totalHeight - padding);
+    context.lineTo(0, padding * 2);
+    context.quadraticCurveTo(0, padding, padding, padding);
+    context.closePath();
 
-  context.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Sfondo semi-trasparente
-  context.fill();
+    context.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Sfondo semi-trasparente
+    context.fill();
 
-  // Disegniamo il testo
-  context.font = `${fontSize}px Arial`;
-  context.fillStyle = 'rgba(0, 0, 0, 1)'; // Colore del testo nero
-  lines.forEach((line, index) => {
-      context.fillText(line, padding, lineHeight * (index + 1) + padding);
-  });
+    // Disegniamo il testo
+    context.font = `${fontSize}px Arial`;
+    context.fillStyle = 'rgba(0, 0, 0, 1)'; // Colore del testo nero
+    lines.forEach((line, index) => {
+        context.fillText(line, padding, lineHeight * (index + 1) + padding);
+    });
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true; 
-  texture.minFilter = THREE.LinearFilter;
-  return texture;
-}
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true; 
+    texture.minFilter = THREE.LinearFilter;
+    return texture;
+  }
 
   showPopup(node) {
     if (this.nodeInfoPopUp) {
@@ -272,6 +272,101 @@ createTextTexture(text) {
         this.nodeInfoPopUp = null;
     }
   }
+
+  extrudeNode(node, extrusionAmount = 1) {
+    node.mesh.position.z += extrusionAmount;
+    this.animatePulsatingColor(node);
+  }
+
+  animatePulsatingColor(node) {
+    const originalColor = new THREE.Color(node.color); // Colore originale del nodo
+    const highlightColor = new THREE.Color(0xffff00); // Colore per la pulsazione (giallo chiaro)
+    const pulseSpeed = 0.01; // Riduci la velocità di pulsazione
+    let pulseDirection = 1; // Direzione della pulsazione (1 = aumenta, -1 = diminuisce)
+    let intensity = 0; // Intensità della transizione
+  
+    const pulse = () => {
+      // Modifica l'intensità tra 0 e 1 per creare l'effetto di pulsazione
+      intensity += pulseSpeed * pulseDirection;
+  
+      // Inverti la direzione se raggiungiamo i limiti di intensità
+      if (intensity >= 1) {
+        pulseDirection = -1;
+        intensity = 1;
+      } else if (intensity <= 0) {
+        pulseDirection = 1;
+        intensity = 0;
+      }
+  
+      // Mescola tra il colore originale e il colore di evidenziazione in base all'intensità
+      const pulsatingColor = originalColor.clone().lerp(highlightColor, intensity);
+  
+      // Imposta il nuovo colore del materiale del nodo
+      node.mesh.material.color.set(pulsatingColor);
+  
+      // Richiama la prossima animazione
+      node.pulseAnimation = requestAnimationFrame(pulse);
+    };
+  
+    pulse(); // Avvia l'animazione
+  }
+
+  // Metodo per fermare l'estrusione e l'animazione del pulsare
+  resetExtrudeNode(node) {
+    node.mesh.position.z = node.initialZ; // Ripristina la posizione
+    if (this.pulseAnimation) {
+      cancelAnimationFrame(this.pulseAnimation);
+      this.pulseAnimation = null;
+    }
+    node.mesh.material.color.set(node.originalColor || node.color); // Ripristina il colore
+  }
+
+  resetPulsation(node) {
+    // Verifica se esiste un'animazione in corso
+    if (node.pulseAnimation) {
+      cancelAnimationFrame(node.pulseAnimation); // Ferma l'animazione
+      node.pulseAnimation = null; // Reset dell'ID di animazione
+    }
+  
+    // Resetta il colore del nodo al suo colore originale
+    node.mesh.material.color.set(node.originalColor); // Colore originale
+  
+    // Resetta l'intensità e la direzione della pulsazione
+    node.intensity = 0;
+    node.pulseDirection = 1;
+  }
+
+  extrudeNodes(nodes) {
+    nodes.forEach(node => {
+      // Sposta il nodo sull'asse Z per l'estrusione
+      node.mesh.position.z += 1; // Esempio di estrusione sull'asse Z
+      
+      // Avvia l'animazione di pulsazione per ciascun nodo
+      this.animatePulsatingColor(node);
+    });
+  }
+
+  resetNodesExtrusion(nodes) {
+    nodes.forEach(node => {
+      // Riporta il nodo alla posizione originale sull'asse Z
+      node.mesh.position.z = node.initialZ;
+  
+      // Ferma la pulsazione del nodo
+      this.resetPulsation(node);
+    });
+  }
+
+  extrudeSelectedNodes() {
+    const nodesToExtrude = [...this.selectedNodes];
+    this.extrudeNodes(nodesToExtrude);
+  }
+
+  resetExtrusion() {
+    const nodesToReset = [...this.selectedNodes];
+    this.resetNodesExtrusion(nodesToReset)
+  }
+
+  
 }
 
 export default GraphInteractions;

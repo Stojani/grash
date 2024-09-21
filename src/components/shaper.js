@@ -396,6 +396,18 @@ class Shaper {
     // Aggiorna la simulazione per considerare il nuovo arco
     this.updateGraphSimulation();
   }
+
+  extrudeSelectedNodes() {
+    //this.stopSimulation();
+    this.interactions.extrudeSelectedNodes();
+  }
+
+  resetExtrusion() {
+    //this.stopSimulation();
+    this.interactions.resetExtrusion();
+  }
+
+
 }
 
 export default Shaper;
