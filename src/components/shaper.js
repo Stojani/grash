@@ -402,6 +402,12 @@ class Shaper {
     this.interactions.extrudeSelectedNodes();
   }
 
+  doExtrusion() {
+    //this.stopSimulation();
+    this.interactions.extrudeSelectedNodes();
+    this.interactions.extrudeSelectedEdges();
+  }
+
   resetExtrusion() {
     //this.stopSimulation();
     this.interactions.resetExtrusion();

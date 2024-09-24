@@ -473,15 +473,42 @@ class GraphInteractions {
     this.extrudeNodes(nodesToExtrude);
   }
 
+  extrudeEdges(edges) {
+    edges.forEach(edge => {
+      // Sposta il nodo sull'asse Z per l'estrusione
+      edge.mesh.position.z += 1; // Esempio di estrusione sull'asse Z
+      
+      // Avvia l'animazione di pulsazione per ciascun nodo
+      //this.animatePulsatingColor(node);
+    });
+  }
+
+  resetEdgesExtrusion(edges) {
+    edges.forEach(edge => {
+      // Riporta il nodo alla posizione originale sull'asse Z
+      edge.mesh.position.z = 0;
+  
+      // Ferma la pulsazione del nodo
+      //this.resetPulsation(node);
+    });
+  }
+
+  extrudeSelectedEdges() {
+    const edgesToExtrude = [...this.selectedEdges];
+    this.extrudeEdges(edgesToExtrude);
+  }
+
   resetExtrusion() {
     const nodesToReset = [...this.selectedNodes];
-    this.resetNodesExtrusion(nodesToReset)
+    this.resetNodesExtrusion(nodesToReset);
+    const edgesToReset = [...this.selectedEdges];
+    this.resetEdgesExtrusion(edgesToReset);
   }
 
   enableShowNodePopUp() {
     this.flagShowNodePopUp = true;
   }
-  
+
   disableShowNodePopUp() {
     this.flagShowNodePopUp = false;
   }
