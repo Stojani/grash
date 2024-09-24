@@ -176,14 +176,18 @@ class GraphInteractions {
 
   highlightEdge(edge) {
     if (edge && edge.mesh && edge.mesh.material) {
-        edge.originalColor = edge.mesh.material.color.getHex(); // Salva il colore originale
-        edge.mesh.material.color.set('#FFD700'); // Giallo per l'evidenziazione
+      if (!this.selectedEdges.includes(edge)) {
+        edge.originalColor = edge.mesh.material.color.getHex();
+        edge.mesh.material.color.set('#FFD700');
+      }
     }
   }
 
   unhighlightEdge(edge) {
     if (edge && edge.mesh && edge.mesh.material && edge.originalColor !== undefined) {
-        edge.mesh.material.color.set(edge.originalColor); // Ripristina il colore originale
+      if (!this.selectedEdges.includes(edge)) {
+        edge.mesh.material.color.set(edge.originalColor);
+      }
     }
   }
 
