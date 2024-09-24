@@ -17,6 +17,7 @@ class GraphInteractions {
     this.hoveredEdge = null;
     this.raycaster = new THREE.Raycaster();
     this.nodeInfoPopUp = null;
+    this.flagShowNodePopUp = true;
     this.initOrbitControls();
     this.addEventListeners();
   }
@@ -129,7 +130,9 @@ class GraphInteractions {
       if (index === -1) {
           selectedNode.highlight();
           this.selectedNodes.push(selectedNode);
-          this.showPopup(selectedNode); // Mostra il popup con i dettagli del nodo
+          if (this.flagShowNodePopUp) {
+            this.showPopup(selectedNode);
+          }
       } else {
           selectedNode.resetColor();
           this.selectedNodes.splice(index, 1);
@@ -473,6 +476,14 @@ class GraphInteractions {
   resetExtrusion() {
     const nodesToReset = [...this.selectedNodes];
     this.resetNodesExtrusion(nodesToReset)
+  }
+
+  enableShowNodePopUp() {
+    this.flagShowNodePopUp = true;
+  }
+  
+  disableShowNodePopUp() {
+    this.flagShowNodePopUp = false;
   }
 
   
