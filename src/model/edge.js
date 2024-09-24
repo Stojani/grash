@@ -1,19 +1,22 @@
 import * as THREE from 'three';
 
 class Edge {
-  static DEFAULT_COLOR = '#ffff66';// '#cccccc';  Very light grey   //'#ffff66'; //yellow
-  static DEFAULT_MATERIAL = new THREE.MeshStandardMaterial({ 
-    color: Edge.DEFAULT_COLOR, 
-    transparent: true, 
-    opacity: 0.5, 
-    metalness: 0.5, 
-    roughness: 0.5 
-  });
+  static DEFAULT_COLOR = '#ffff66'; // '#cccccc'; Very light grey //'#ffff66'; //yellow
 
-  constructor(source, target, material = Edge.DEFAULT_MATERIAL) {
+  constructor(source, target) {
     this.source = source;
     this.target = target;
-    this.material = material;
+
+    // Crea un nuovo materiale per ogni arco
+    this.material = new THREE.MeshStandardMaterial({
+      color: Edge.DEFAULT_COLOR, 
+      transparent: true, 
+      opacity: 0.5, 
+      metalness: 0.5, 
+      roughness: 0.5 
+    });
+
+    this.originalColor = this.material.color.getStyle(); // Salva il colore originale
     this.updateGeometry();
   }
 
@@ -58,10 +61,11 @@ class Edge {
   }
 
   set color(newColor) {
-    this.material.color.set(newColor);
-    if (this.mesh) {
-      this.mesh.material = this.material;
-    }
+    this.mesh.material.color.set(newColor);
+  }
+
+  resetColor() {
+    this.mesh.material.color.set(this.originalColor);
   }
 
   removeFromScene(scene) {

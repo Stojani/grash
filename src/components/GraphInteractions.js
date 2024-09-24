@@ -11,7 +11,10 @@ class GraphInteractions {
     this.controls = null;
     this.selectedNodes = [];
     this.selectedNode = null;
+    this.selectedEdges = [];
+    this.selectedEdge = null;
     this.hoveredNode = null;
+    this.hoveredEdge = null;
     this.raycaster = new THREE.Raycaster();
     this.nodeInfoPopUp = null;
     this.initOrbitControls();
@@ -45,17 +48,36 @@ class GraphInteractions {
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    //console.log('Mouse coordinates:', mouse);
-
     this.raycaster.setFromCamera(mouse, this.camera);
 
-    const intersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
-    if (intersects.length > 0) {
-      const hoveredObject = intersects[0].object;
-      this.highlightNode(hoveredObject);
+    // Verifica delle intersezioni con i nodi
+    const nodeIntersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
+    if (nodeIntersects.length > 0) {
+        const hoveredObject = nodeIntersects[0].object;
+        this.highlightNode(hoveredObject);
     } else {
-      this.unhighlightNode();
+        this.unhighlightNode();
     }
+
+    // Verifica delle intersezioni con gli archi (limita l'intersezione solo al primo arco trovato)
+    const edgeIntersects = this.raycaster.intersectObjects(this.edges.map(edge => edge.mesh), true);
+
+    // Gestisci l'evidenziazione dell'arco, assicurati che solo il primo arco venga evidenziato
+    if (edgeIntersects.length > 0) {
+
+      const hoveredEdgeObject = edgeIntersects[0].object; // Solo il primo arco trovato
+      const hoveredEdge = this.edges.find(edge => edge.mesh === hoveredEdgeObject);
+
+      if (hoveredEdge && hoveredEdge !== this.hoveredEdge) {
+        this.unhighlightEdge(this.hoveredEdge);
+        this.highlightEdge(hoveredEdge);
+        this.hoveredEdge = hoveredEdge;
+      }
+    } else if (this.hoveredEdge) {
+      this.unhighlightEdge(this.hoveredEdge);
+      this.hoveredEdge = null;
+    }
+
     this.controls.update();
   }
 
@@ -67,10 +89,18 @@ class GraphInteractions {
 
     this.raycaster.setFromCamera(mouse, this.camera);
 
-    const intersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
-    if (intersects.length > 0) {
-      const selectedObject = intersects[0].object;
-      this.selectNode(selectedObject);
+    // Seleziona i nodi
+    const nodeIntersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
+    if (nodeIntersects.length > 0) {
+        const selectedNode = nodeIntersects[0].object;
+        this.selectNode(selectedNode);
+    } else {
+        // Seleziona gli archi solo se non è stato selezionato un nodo
+        const edgeIntersects = this.raycaster.intersectObjects(this.edges.map(edge => edge.mesh));
+        if (edgeIntersects.length > 0) {
+            const selectedEdge = edgeIntersects[0].object;
+            this.selectEdge(selectedEdge);
+        }
     }
   }
 
@@ -105,6 +135,81 @@ class GraphInteractions {
           this.selectedNodes.splice(index, 1);
           this.hidePopup(); // Nascondi il popup se deselezionato
       }
+    }
+  }
+
+  //ARCHI
+  calculateDistanceToEdge(mousePosition, edge) {
+    const start = edge.source.mesh.position;
+    const end = edge.target.mesh.position;
+
+    const lineVec = new THREE.Vector3().subVectors(end, start);
+    const startToMouse = new THREE.Vector3().subVectors(mousePosition, start);
+
+    const projectionLength = startToMouse.dot(lineVec) / lineVec.lengthSq();
+    const closestPoint = start.clone().add(lineVec.multiplyScalar(projectionLength));
+
+    return mousePosition.distanceTo(closestPoint);
+  }
+
+  highlightEdgeOnProximity(mousePosition) {
+    let closestEdge = null;
+    let minDistance = Infinity;
+
+    this.edges.forEach(edge => {
+        const distance = this.calculateDistanceToEdge(mousePosition, edge);
+
+        // Imposta una soglia di vicinanza, ad esempio 0.2
+        if (distance < 0.2 && distance < minDistance) {
+            closestEdge = edge;
+            minDistance = distance;
+        }
+    });
+
+    // Se c'è un arco vicino, evidenzialo
+    if (closestEdge) {
+        this.highlightEdge(closestEdge);
+    } else {
+        this.unhighlightAllEdges();
+    }
+  }
+
+  highlightEdge(edge) {
+    if (edge && edge.mesh && edge.mesh.material) {
+        edge.originalColor = edge.mesh.material.color.getHex(); // Salva il colore originale
+        edge.mesh.material.color.set('#FFD700'); // Giallo per l'evidenziazione
+    }
+  }
+
+  unhighlightEdge(edge) {
+    if (edge && edge.mesh && edge.mesh.material && edge.originalColor !== undefined) {
+        edge.mesh.material.color.set(edge.originalColor); // Ripristina il colore originale
+    }
+  }
+
+  unhighlightAllEdges() {
+    this.edges.forEach(edge => {
+        if (edge && edge.mesh && edge.mesh.material) {
+            edge.mesh.material.color.set(edge.originalColor); // Resetta il colore
+        }
+    });
+  }
+
+  selectEdge(edge) {
+    const selectedEdge = this.edges.find(e => e.mesh === edge); // Trova l'arco effettivo
+
+    if (selectedEdge) {
+        const index = this.selectedEdges.indexOf(selectedEdge);
+
+        if (index === -1) {
+            // Se l'arco non è selezionato, selezionalo e cambia colore
+            selectedEdge.color = '#FF0000'; // Rosso per la selezione
+            this.selectedEdges.push(selectedEdge);
+        } else {
+            // Se l'arco è già selezionato, deselezionalo e resetta il colore
+            selectedEdge.resetColor(); // Reset al colore originale
+            this.selectedEdges.splice(index, 1);
+        }
     }
   }
 
