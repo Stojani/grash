@@ -51,7 +51,6 @@ class GraphInteractions {
 
     this.raycaster.setFromCamera(mouse, this.camera);
 
-    // Verifica delle intersezioni con i nodi
     const nodeIntersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
     if (nodeIntersects.length > 0) {
         const hoveredObject = nodeIntersects[0].object;
@@ -60,13 +59,11 @@ class GraphInteractions {
         this.unhighlightNode();
     }
 
-    // Verifica delle intersezioni con gli archi (limita l'intersezione solo al primo arco trovato)
     const edgeIntersects = this.raycaster.intersectObjects(this.edges.map(edge => edge.mesh), true);
 
-    // Gestisci l'evidenziazione dell'arco, assicurati che solo il primo arco venga evidenziato
     if (edgeIntersects.length > 0) {
 
-      const hoveredEdgeObject = edgeIntersects[0].object; // Solo il primo arco trovato
+      const hoveredEdgeObject = edgeIntersects[0].object;
       const hoveredEdge = this.edges.find(edge => edge.mesh === hoveredEdgeObject);
 
       if (hoveredEdge && hoveredEdge !== this.hoveredEdge) {
@@ -90,13 +87,11 @@ class GraphInteractions {
 
     this.raycaster.setFromCamera(mouse, this.camera);
 
-    // Seleziona i nodi
     const nodeIntersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
     if (nodeIntersects.length > 0) {
         const selectedNode = nodeIntersects[0].object;
         this.selectNode(selectedNode);
     } else {
-        // Seleziona gli archi solo se non è stato selezionato un nodo
         const edgeIntersects = this.raycaster.intersectObjects(this.edges.map(edge => edge.mesh));
         if (edgeIntersects.length > 0) {
             const selectedEdge = edgeIntersects[0].object;
@@ -136,7 +131,7 @@ class GraphInteractions {
       } else {
           selectedNode.resetColor();
           this.selectedNodes.splice(index, 1);
-          this.hidePopup(); // Nascondi il popup se deselezionato
+          this.hidePopup();
       }
     }
   }
@@ -162,14 +157,12 @@ class GraphInteractions {
     this.edges.forEach(edge => {
         const distance = this.calculateDistanceToEdge(mousePosition, edge);
 
-        // Imposta una soglia di vicinanza, ad esempio 0.2
         if (distance < 0.2 && distance < minDistance) {
             closestEdge = edge;
             minDistance = distance;
         }
     });
 
-    // Se c'è un arco vicino, evidenzialo
     if (closestEdge) {
         this.highlightEdge(closestEdge);
     } else {
@@ -197,24 +190,22 @@ class GraphInteractions {
   unhighlightAllEdges() {
     this.edges.forEach(edge => {
         if (edge && edge.mesh && edge.mesh.material) {
-            edge.mesh.material.color.set(edge.originalColor); // Resetta il colore
+            edge.mesh.material.color.set(edge.originalColor);
         }
     });
   }
 
   selectEdge(edge) {
-    const selectedEdge = this.edges.find(e => e.mesh === edge); // Trova l'arco effettivo
+    const selectedEdge = this.edges.find(e => e.mesh === edge);
 
     if (selectedEdge) {
         const index = this.selectedEdges.indexOf(selectedEdge);
 
         if (index === -1) {
-            // Se l'arco non è selezionato, selezionalo e cambia colore
-            selectedEdge.color = '#FF0000'; // Rosso per la selezione
+            selectedEdge.color = '#FF0000';
             this.selectedEdges.push(selectedEdge);
         } else {
-            // Se l'arco è già selezionato, deselezionalo e resetta il colore
-            selectedEdge.resetColor(); // Reset al colore originale
+            selectedEdge.resetColor();
             this.selectedEdges.splice(index, 1);
         }
     }
@@ -262,32 +253,26 @@ class GraphInteractions {
   removeNode(nodeMesh) {
     const nodeToRemove = this.nodes.find(node => node.mesh === nodeMesh);
     if (nodeToRemove) {
-      // Trova e rimuovi tutti gli archi collegati a questo nodo
       const edgesToRemove = this.edges.filter(edge => edge.source === nodeToRemove || edge.target === nodeToRemove);
   
       edgesToRemove.forEach(edge => {
-        // Rimuovi l'arco dalla scena e libera le risorse
         if (edge.mesh && edge.mesh.parent) {
           edge.mesh.parent.remove(edge.mesh);
-          edge.mesh.geometry.dispose(); // Rilascia la geometria dell'arco
-          edge.mesh.material.dispose(); // Rilascia il materiale dell'arco
+          edge.mesh.geometry.dispose();
+          edge.mesh.material.dispose();
         }
       });
   
-      // Aggiorna l'array degli archi rimuovendo quelli collegati al nodo eliminato
       this.edges = this.edges.filter(edge => !edgesToRemove.includes(edge));
   
-      // Rimuovi il nodo dalla scena
       if (nodeToRemove.mesh && nodeToRemove.mesh.parent) {
         nodeToRemove.mesh.parent.remove(nodeToRemove.mesh);
-        nodeToRemove.mesh.geometry.dispose(); // Rilascia la geometria del nodo
-        nodeToRemove.mesh.material.dispose(); // Rilascia il materiale del nodo
+        nodeToRemove.mesh.geometry.dispose();
+        nodeToRemove.mesh.material.dispose();
       }
   
-      // Aggiorna l'array dei nodi
       this.nodes = this.nodes.filter(node => node !== nodeToRemove);
   
-      // Resetta lo stato di selezione ed evidenziazione se necessario
       this.selectedNodes = this.selectedNodes.filter(node => node !== nodeToRemove);
       if (this.hoveredNode === nodeToRemove) {
         this.hoveredNode = null;
@@ -309,14 +294,10 @@ class GraphInteractions {
         transparent: true
     });
 
-    const sprite = new THREE.Sprite(spriteMaterial);
-    
-    // Posizionamento del popup leggermente sopra e a destra del nodo
+    const sprite = new THREE.Sprite(spriteMaterial);   
     sprite.position.copy(node.mesh.position);
-
-    sprite.position.y += 2; // Sposta leggermente sopra
-
-    sprite.scale.set(3, 3, 1); // Regola la dimensione della nuvoletta
+    sprite.position.y += 2;
+    sprite.scale.set(3, 3, 1);
 
     this.nodeInfoPopUp = sprite;
     this.scene.add(this.nodeInfoPopUp);
@@ -326,23 +307,20 @@ class GraphInteractions {
   createTextTexture(text) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    const lines = text.split('\n'); // Dividi il testo in righe
+    const lines = text.split('\n');
 
-    const fontSize = 14; // Dimensione ridotta del testo
+    const fontSize = 14;
     const lineHeight = fontSize * 1.2;
-    const padding = 8; // Riduciamo il padding
+    const padding = 8;
 
-    // Calcoliamo la larghezza massima e l'altezza totale del testo
     const maxWidth = Math.max(...lines.map(line => context.measureText(line).width)) + padding * 2;
     const totalHeight = lineHeight * lines.length + padding * 2;
 
-    // Miglioriamo la risoluzione del canvas
-    const scaleFactor = 3; // Fattore di scala maggiore per alta risoluzione
+    const scaleFactor = 3;
     canvas.width = maxWidth * scaleFactor;
     canvas.height = totalHeight * scaleFactor;
     context.scale(scaleFactor, scaleFactor);
 
-    // Disegniamo la "nuvoletta" senza la punta
     context.beginPath();
     context.moveTo(padding, padding);
     context.lineTo(maxWidth - padding, padding);
@@ -355,12 +333,11 @@ class GraphInteractions {
     context.quadraticCurveTo(0, padding, padding, padding);
     context.closePath();
 
-    context.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Sfondo semi-trasparente
+    context.fillStyle = 'rgba(255, 255, 255, 0.8)';
     context.fill();
 
-    // Disegniamo il testo
     context.font = `${fontSize}px Arial`;
-    context.fillStyle = 'rgba(0, 0, 0, 1)'; // Colore del testo nero
+    context.fillStyle = 'rgba(0, 0, 0, 1)';
     lines.forEach((line, index) => {
         context.fillText(line, padding, lineHeight * (index + 1) + padding);
     });
@@ -373,9 +350,9 @@ class GraphInteractions {
 
   showPopup(node) {
     if (this.nodeInfoPopUp) {
-        this.scene.remove(this.nodeInfoPopUp); // Rimuovi il popup precedente, se esiste
+        this.scene.remove(this.nodeInfoPopUp);
     }
-    this.createPopup(node); // Crea e aggiungi il nuovo popup
+    this.createPopup(node);
   }
 
   hidePopup() {
@@ -391,114 +368,75 @@ class GraphInteractions {
   }
 
   animatePulsatingColor(node) {
-    const originalColor = new THREE.Color(node.color); // Colore originale del nodo
-    const highlightColor = new THREE.Color(0xffff00); // Colore per la pulsazione (giallo chiaro)
-    const pulseSpeed = 0.01; // Riduci la velocità di pulsazione
-    let pulseDirection = 1; // Direzione della pulsazione (1 = aumenta, -1 = diminuisce)
-    let intensity = 0; // Intensità della transizione
+    const originalColor = new THREE.Color(node.color);
+    const highlightColor = new THREE.Color(0xffff00);
+    const pulseSpeed = 0.01;
+    let pulseDirection = 1;
+    let intensity = 0;
   
     const pulse = () => {
-      // Modifica l'intensità tra 0 e 1 per creare l'effetto di pulsazione
       intensity += pulseSpeed * pulseDirection;
   
-      // Inverti la direzione se raggiungiamo i limiti di intensità
       if (intensity >= 1) {
         pulseDirection = -1;
         intensity = 1;
       } else if (intensity <= 0) {
         pulseDirection = 1;
         intensity = 0;
-      }
-  
-      // Mescola tra il colore originale e il colore di evidenziazione in base all'intensità
+      } 
       const pulsatingColor = originalColor.clone().lerp(highlightColor, intensity);
-  
-      // Imposta il nuovo colore del materiale del nodo
       node.mesh.material.color.set(pulsatingColor);
-  
-      // Richiama la prossima animazione
       node.pulseAnimation = requestAnimationFrame(pulse);
     };
-  
-    pulse(); // Avvia l'animazione
+    pulse();
   }
 
-  extrudeNodeAsMushroom(node) {
-    const duration = 2000; // Durata dell'animazione in millisecondi
-    const initialZ = node.mesh.position.z; // Posizione iniziale sull'asse z
-    const maxZ = initialZ + 5; // Massimo spostamento sull'asse z (sommità del fungo)
-    const maxScale = 2; // Massima espansione laterale
-    
-    const startTime = performance.now();
+  resetPulsation(node) {
+    if (node.pulseAnimation) {
+      cancelAnimationFrame(node.pulseAnimation);
+      node.pulseAnimation = null;
+    }
   
-    const animate = (currentTime) => {
-      const elapsedTime = currentTime - startTime;
-      const progress = Math.min(elapsedTime / duration, 1); // Progressione dell'animazione (da 0 a 1)
-      
-      // Prima fase: crescita verticale rapida
-      if (progress < 0.5) {
-        const z = initialZ + progress * 2 * (maxZ - initialZ); // Crescita verticale
-        node.mesh.position.z = z;
-        node.mesh.scale.set(1, 1, 1 + progress * 2); // Leggera espansione verticale
-      }
-      
-      // Seconda fase: espansione laterale con leggera compressione verticale
-      else {
-        const z = maxZ - (progress - 0.5) * 2 * (maxZ - initialZ); // Ritorno alla base (compressione)
-        node.mesh.position.z = z;
-        const scale = 1 + (progress - 0.5) * 2 * (maxScale - 1); // Espansione laterale
-        node.mesh.scale.set(scale, scale, 1 - (progress - 0.5)); // Compressione in altezza
-      }
-      
-      // Richiama l'animazione fino a che non è completa
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        // Reset finale alla fine dell'animazione (se necessario)
-        node.mesh.scale.set(1, 1, 1);
-        node.mesh.position.z = initialZ; // Riporta il nodo alla posizione iniziale
-      }
-    };
-  
-    // Avvia l'animazione
-    requestAnimationFrame(animate);
+    node.mesh.material.color.set(node.originalColor);
+    node.intensity = 0;
+    node.pulseDirection = 1;
   }
 
+  resetExtrudeNode(node) {
+    node.mesh.position.z = node.initialZ;
+    if (this.pulseAnimation) {
+      cancelAnimationFrame(this.pulseAnimation);
+      this.pulseAnimation = null;
+    }
+    node.mesh.material.color.set(node.originalColor || node.color);
+  }
+
+  //NODES EXTRUSION
   extrudeNodeAsMushroomWithStem(node, finalZ = 1) {
-    const duration = 2000; // Durata dell'animazione in millisecondi
-    const initialZ = node.mesh.position.z; // Posizione iniziale sull'asse z
+    const duration = 2000;
+    const initialZ = node.mesh.position.z;
     const startTime = performance.now();
   
-    // Diametro maggiore alla base e minore al vertice
-    const baseRadius = 0.3; // Raggio alla base
-    const topRadius = 0.15; // Raggio al vertice
+    const baseRadius = 0.3;
+    const topRadius = 0.15;
   
-    // Crea un cilindro verticale tra la posizione iniziale e finale
-    const height = Math.abs(finalZ - initialZ); // Altezza del cilindro
+    const height = Math.abs(finalZ - initialZ);
     const stemGeometry = new THREE.CylinderGeometry(topRadius, baseRadius,  height, 32);
     const stemMaterial = new THREE.MeshStandardMaterial({ color: '#999999', transparent: true, opacity: 0.8 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-  
-    // Ruota il cilindro di 90 gradi sull'asse X
     stem.rotation.x = Math.PI / 2;
-  
-    // Posiziona il cilindro in modo che la base sia sulla coordinata Z iniziale del nodo
-    stem.position.set(node.mesh.position.x, node.mesh.position.y, initialZ); // Posiziona al centro del cilindro
-    
-    //initial height
+    stem.position.set(node.mesh.position.x, node.mesh.position.y, initialZ);
     stem.scale.y = 0;
-    
-    this.scene.add(stem); // Aggiungi il cilindro alla scena
+    this.scene.add(stem);
     node.extrusionStem = stem;
   
     const animate = (currentTime) => {
       const elapsedTime = currentTime - startTime;
-      const progress = Math.min(elapsedTime / duration, 1); // Progressione dell'animazione (da 0 a 1)
+      const progress = Math.min(elapsedTime / duration, 1);
   
       const z = initialZ + progress * (finalZ - initialZ);
       node.mesh.position.z = z;
   
-      // Aggiorna il cilindro (stem) durante l'animazione
       stem.scale.y = progress;
       stem.position.z = initialZ + (progress * height) / 2;
   
@@ -507,36 +445,29 @@ class GraphInteractions {
       }
     };
   
-    // Avvia l'animazione
     requestAnimationFrame(animate);
   }
 
   resetNodeExtrusion(node, duration = 2000) {
     const stem = node.extrusionStem;
-    const finalZ = node.mesh.position.z; // Posizione iniziale sull'asse z
-    const initialZ = finalZ - 1; // La posizione finale che il nodo aveva durante l'estrusione
+    const finalZ = node.mesh.position.z;
+    const initialZ = finalZ - 1;
     const startTime = performance.now();
-  
     const height = Math.abs(finalZ - initialZ);
 
     const animateReset = (currentTime) => {
       const elapsedTime = currentTime - startTime;
-      const progress = Math.min(elapsedTime / duration, 1); // Progressione dell'animazione (da 0 a 1)
+      const progress = Math.min(elapsedTime / duration, 1);
 
-      // Ripristina il nodo gradualmente verso la posizione iniziale sull'asse Z
       node.mesh.position.z = finalZ - progress * (finalZ - initialZ);
 
-      // Accorcia il cilindro solo dalla parte superiore
-      stem.scale.y = 1 - progress; // Riduci l'altezza del cilindro
+      stem.scale.y = 1 - progress;
+      stem.position.z = (height * (1 - progress)) / 2;
 
-      // Aggiorna la posizione Y del cilindro per mantenerlo sulla base
-      stem.position.z = (height * (1 - progress)) / 2; // Mantieni la base fissata, riducendo solo la parte superiore
-
-      // Rimuovi il cilindro dalla scena quando completamente accorciato
       if (progress >= 1) {
         this.scene.remove(stem);
-        stem.geometry.dispose(); // Rilascia la geometria del cilindro
-        stem.material.dispose(); // Rilascia il materiale del cilindro
+        stem.geometry.dispose();
+        stem.material.dispose();
         node.extrusionStem = null;
       }
 
@@ -545,45 +476,10 @@ class GraphInteractions {
       }
     };
   
-    // Avvia l'animazione di reset
     requestAnimationFrame(animateReset);
   }
 
-  // Metodo per fermare l'estrusione e l'animazione del pulsare
-  resetExtrudeNode(node) {
-    node.mesh.position.z = node.initialZ; // Ripristina la posizione
-    if (this.pulseAnimation) {
-      cancelAnimationFrame(this.pulseAnimation);
-      this.pulseAnimation = null;
-    }
-    node.mesh.material.color.set(node.originalColor || node.color); // Ripristina il colore
-  }
-
-  resetPulsation(node) {
-    // Verifica se esiste un'animazione in corso
-    if (node.pulseAnimation) {
-      cancelAnimationFrame(node.pulseAnimation); // Ferma l'animazione
-      node.pulseAnimation = null; // Reset dell'ID di animazione
-    }
-  
-    // Resetta il colore del nodo al suo colore originale
-    node.mesh.material.color.set(node.originalColor); // Colore originale
-  
-    // Resetta l'intensità e la direzione della pulsazione
-    node.intensity = 0;
-    node.pulseDirection = 1;
-  }
-
   extrudeNodes(nodes) {
-    /*
-    nodes.forEach(node => {
-      // Sposta il nodo sull'asse Z per l'estrusione
-      node.mesh.position.z += 1; // Esempio di estrusione sull'asse Z
-      
-      // Avvia l'animazione di pulsazione per ciascun nodo
-      this.animatePulsatingColor(node);
-    });*/
-
     nodes.forEach(node => {
       this.extrudeNodeAsMushroomWithStem(node);
     });
@@ -593,15 +489,6 @@ class GraphInteractions {
     nodes.forEach(node => {
       this.resetNodeExtrusion(node);
     });
-    /*
-    nodes.forEach(node => {
-      // Riporta il nodo alla posizione originale sull'asse Z
-      node.mesh.position.z = node.initialZ;
-  
-      // Ferma la pulsazione del nodo
-      this.resetPulsation(node);
-    });
-    */
   }
 
   extrudeSelectedNodes() {
@@ -609,23 +496,91 @@ class GraphInteractions {
     this.extrudeNodes(nodesToExtrude);
   }
 
+  //ESDGES EXTRUSION
+  extrudeEdgeAsBox(edge, finalZ = 1) {
+    const duration = 2000;
+    const startZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
+    const initialZ = startZ;
+    const startTime = performance.now();
+
+    const start = edge.source.mesh.position;
+    const end = edge.target.mesh.position;
+    const distance = start.distanceTo(end);
+
+    const depth = 0.05;
+
+    const boxGeometry = new THREE.BoxGeometry(finalZ, depth, distance);
+    const boxMaterial = new THREE.MeshStandardMaterial({ color: '#999999', transparent: true, opacity: 0.8 });
+    const box = new THREE.Mesh(boxGeometry, boxMaterial);
+
+    const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    box.position.copy(midPoint);
+
+    const orientation = new THREE.Matrix4();
+    orientation.lookAt(start, end, new THREE.Vector3(0, 1, 0));
+    box.quaternion.setFromRotationMatrix(orientation);
+    box.scale.x = 0;
+
+    this.scene.add(box);
+    edge.extrusionBox = box;
+
+    const animate = (currentTime) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+
+        const z = initialZ + progress * (finalZ - initialZ);
+        edge.mesh.position.z = z;
+    
+        box.scale.x = progress;
+        box.position.z = initialZ + (progress * finalZ) / 2;
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    };
+
+    requestAnimationFrame(animate);
+  }
+
+  resetEdgeExtrusion(edge, duration = 2000) {
+    const box = edge.extrusionBox;
+    const finalZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
+    const initialZ = finalZ - 1;
+    const startTime = performance.now();
+
+    const animateReset = (currentTime) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        
+        edge.mesh.position.z = finalZ - progress * (finalZ - initialZ);;
+
+        box.position.z = (finalZ * (1 - progress)) / 2;
+        box.scale.x = 1 - progress;
+
+        if (progress >= 1) {
+            this.scene.remove(box);
+            box.geometry.dispose();
+            box.material.dispose();
+            edge.extrusionBox = null;
+        }
+
+        if (progress < 1) {
+            requestAnimationFrame(animateReset);
+        }
+    };
+
+    requestAnimationFrame(animateReset);
+  }
+
   extrudeEdges(edges) {
     edges.forEach(edge => {
-      // Sposta il nodo sull'asse Z per l'estrusione
-      edge.mesh.position.z += 1; // Esempio di estrusione sull'asse Z
-      
-      // Avvia l'animazione di pulsazione per ciascun nodo
-      //this.animatePulsatingColor(node);
+        this.extrudeEdgeAsBox(edge);
     });
   }
 
   resetEdgesExtrusion(edges) {
     edges.forEach(edge => {
-      // Riporta il nodo alla posizione originale sull'asse Z
-      edge.mesh.position.z = 0;
-  
-      // Ferma la pulsazione del nodo
-      //this.resetPulsation(node);
+        this.resetEdgeExtrusion(edge);
     });
   }
 

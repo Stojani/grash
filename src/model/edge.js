@@ -6,6 +6,7 @@ class Edge {
   constructor(source, target) {
     this.source = source;
     this.target = target;
+    this.extrusionBox = null;
 
     // Crea un nuovo materiale per ogni arco
     this.material = new THREE.MeshStandardMaterial({
