@@ -464,6 +464,91 @@ class GraphInteractions {
     requestAnimationFrame(animate);
   }
 
+  extrudeNodeAsMushroomWithStem(node, finalZ = 1) {
+    const duration = 2000; // Durata dell'animazione in millisecondi
+    const initialZ = node.mesh.position.z; // Posizione iniziale sull'asse z
+    const startTime = performance.now();
+  
+    // Diametro maggiore alla base e minore al vertice
+    const baseRadius = 0.3; // Raggio alla base
+    const topRadius = 0.15; // Raggio al vertice
+  
+    // Crea un cilindro verticale tra la posizione iniziale e finale
+    const height = Math.abs(finalZ - initialZ); // Altezza del cilindro
+    const stemGeometry = new THREE.CylinderGeometry(topRadius, baseRadius,  height, 32);
+    const stemMaterial = new THREE.MeshStandardMaterial({ color: '#999999', transparent: true, opacity: 0.8 });
+    const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+  
+    // Ruota il cilindro di 90 gradi sull'asse X
+    stem.rotation.x = Math.PI / 2;
+  
+    // Posiziona il cilindro in modo che la base sia sulla coordinata Z iniziale del nodo
+    stem.position.set(node.mesh.position.x, node.mesh.position.y, initialZ); // Posiziona al centro del cilindro
+    
+    //initial height
+    stem.scale.y = 0;
+    
+    this.scene.add(stem); // Aggiungi il cilindro alla scena
+    node.extrusionStem = stem;
+  
+    const animate = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1); // Progressione dell'animazione (da 0 a 1)
+  
+      const z = initialZ + progress * (finalZ - initialZ);
+      node.mesh.position.z = z;
+  
+      // Aggiorna il cilindro (stem) durante l'animazione
+      stem.scale.y = progress;
+      stem.position.z = initialZ + (progress * height) / 2;
+  
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+  
+    // Avvia l'animazione
+    requestAnimationFrame(animate);
+  }
+
+  resetNodeExtrusion(node, duration = 2000) {
+    const stem = node.extrusionStem;
+    const finalZ = node.mesh.position.z; // Posizione iniziale sull'asse z
+    const initialZ = finalZ - 1; // La posizione finale che il nodo aveva durante l'estrusione
+    const startTime = performance.now();
+  
+    const height = Math.abs(finalZ - initialZ);
+
+    const animateReset = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1); // Progressione dell'animazione (da 0 a 1)
+
+      // Ripristina il nodo gradualmente verso la posizione iniziale sull'asse Z
+      node.mesh.position.z = finalZ - progress * (finalZ - initialZ);
+
+      // Accorcia il cilindro solo dalla parte superiore
+      stem.scale.y = 1 - progress; // Riduci l'altezza del cilindro
+
+      // Aggiorna la posizione Y del cilindro per mantenerlo sulla base
+      stem.position.z = (height * (1 - progress)) / 2; // Mantieni la base fissata, riducendo solo la parte superiore
+
+      // Rimuovi il cilindro dalla scena quando completamente accorciato
+      if (progress >= 1) {
+        this.scene.remove(stem);
+        stem.geometry.dispose(); // Rilascia la geometria del cilindro
+        stem.material.dispose(); // Rilascia il materiale del cilindro
+        node.extrusionStem = null;
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animateReset);
+      }
+    };
+  
+    // Avvia l'animazione di reset
+    requestAnimationFrame(animateReset);
+  }
+
   // Metodo per fermare l'estrusione e l'animazione del pulsare
   resetExtrudeNode(node) {
     node.mesh.position.z = node.initialZ; // Ripristina la posizione
@@ -500,11 +585,15 @@ class GraphInteractions {
     });*/
 
     nodes.forEach(node => {
-      this.extrudeNodeAsMushroom(node);
+      this.extrudeNodeAsMushroomWithStem(node);
     });
   }
 
   resetNodesExtrusion(nodes) {
+    nodes.forEach(node => {
+      this.resetNodeExtrusion(node);
+    });
+    /*
     nodes.forEach(node => {
       // Riporta il nodo alla posizione originale sull'asse Z
       node.mesh.position.z = node.initialZ;
@@ -512,6 +601,7 @@ class GraphInteractions {
       // Ferma la pulsazione del nodo
       this.resetPulsation(node);
     });
+    */
   }
 
   extrudeSelectedNodes() {

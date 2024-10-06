@@ -11,6 +11,7 @@ class Node {
     this.z = z;
     this._color = color;
     this._geometry = geometry;
+    this.extrusionStem = null;
 
     this.material = new THREE.MeshStandardMaterial({ color: this.color, metalness: 0.5, roughness: 0.5 });
     this.mesh = new THREE.Mesh(this._geometry, this.material);
