@@ -423,6 +423,47 @@ class GraphInteractions {
     pulse(); // Avvia l'animazione
   }
 
+  extrudeNodeAsMushroom(node) {
+    const duration = 2000; // Durata dell'animazione in millisecondi
+    const initialZ = node.mesh.position.z; // Posizione iniziale sull'asse z
+    const maxZ = initialZ + 5; // Massimo spostamento sull'asse z (sommità del fungo)
+    const maxScale = 2; // Massima espansione laterale
+    
+    const startTime = performance.now();
+  
+    const animate = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1); // Progressione dell'animazione (da 0 a 1)
+      
+      // Prima fase: crescita verticale rapida
+      if (progress < 0.5) {
+        const z = initialZ + progress * 2 * (maxZ - initialZ); // Crescita verticale
+        node.mesh.position.z = z;
+        node.mesh.scale.set(1, 1, 1 + progress * 2); // Leggera espansione verticale
+      }
+      
+      // Seconda fase: espansione laterale con leggera compressione verticale
+      else {
+        const z = maxZ - (progress - 0.5) * 2 * (maxZ - initialZ); // Ritorno alla base (compressione)
+        node.mesh.position.z = z;
+        const scale = 1 + (progress - 0.5) * 2 * (maxScale - 1); // Espansione laterale
+        node.mesh.scale.set(scale, scale, 1 - (progress - 0.5)); // Compressione in altezza
+      }
+      
+      // Richiama l'animazione fino a che non è completa
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Reset finale alla fine dell'animazione (se necessario)
+        node.mesh.scale.set(1, 1, 1);
+        node.mesh.position.z = initialZ; // Riporta il nodo alla posizione iniziale
+      }
+    };
+  
+    // Avvia l'animazione
+    requestAnimationFrame(animate);
+  }
+
   // Metodo per fermare l'estrusione e l'animazione del pulsare
   resetExtrudeNode(node) {
     node.mesh.position.z = node.initialZ; // Ripristina la posizione
@@ -449,12 +490,17 @@ class GraphInteractions {
   }
 
   extrudeNodes(nodes) {
+    /*
     nodes.forEach(node => {
       // Sposta il nodo sull'asse Z per l'estrusione
       node.mesh.position.z += 1; // Esempio di estrusione sull'asse Z
       
       // Avvia l'animazione di pulsazione per ciascun nodo
       this.animatePulsatingColor(node);
+    });*/
+
+    nodes.forEach(node => {
+      this.extrudeNodeAsMushroom(node);
     });
   }
 

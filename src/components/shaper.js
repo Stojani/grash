@@ -40,13 +40,22 @@ class Shaper {
       this.scene.add(edge.mesh);
     });
 
-    const tabletColor = '#cccccc'; // '#ffff66'; yellow   '#cccccc'; // Very light grey
+    const textureLoader = new THREE.TextureLoader();
+    const paperTexture = textureLoader.load('assets/watercolor-paper-texture.jpg');
+
     this.tabletGeometry = new THREE.BoxGeometry(100, 100, 0.5);
-    this.tabletMaterial = new THREE.MeshPhongMaterial({ color: tabletColor, side: THREE.DoubleSide });
+    this.tabletMaterial = new THREE.MeshStandardMaterial({
+      map: paperTexture,
+      bumpMap: paperTexture,
+      bumpScale: 0.05,
+      roughness: 0.9,
+      side: THREE.DoubleSide
+    });
+
     this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
     this.tablet.position.z = -1;
     this.tablet.visible = false;
-    this.tablet.receiveShadow = false;
+    //this.tablet.receiveShadow = true;
     this.scene.add(this.tablet);
 
     this.interactions = new GraphInteractions(this.camera, this.renderer, this.scene, this.nodes, this.edges);
