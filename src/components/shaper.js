@@ -18,7 +18,7 @@ class Shaper {
     this.defaultBackgroundColor = new THREE.Color(0x000000);
     this.scene.background = this.defaultBackgroundColor;
 
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.camera.position.z = 15;
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -285,6 +285,26 @@ class Shaper {
   setCameraPosition(x, y, z) {
     if (!this.camera) return;
     this.camera.position.set(x, y, z);
+    this.camera.updateProjectionMatrix();
+  }
+
+  setCameraSettings({ fov = 35, distance = 30, near = 0.1, far = 1000 }) {
+    if (!this.camera) return;
+    
+    //this.camera.position.set(0, 0, distance);
+    //this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.fov = fov;
+    this.camera.near = near;
+    this.camera.far = far;
+    this.camera.updateProjectionMatrix();
+  }
+
+  resetCameraSettings() {
+    if (!this.camera) return;
+    
+    this.camera.fov = 50; //default
+    this.camera.near = 0.1; //default
+    this.camera.far = 2000; //default
     this.camera.updateProjectionMatrix();
   }
 
