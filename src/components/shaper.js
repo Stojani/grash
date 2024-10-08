@@ -69,23 +69,58 @@ class Shaper {
     this.animate();
   }
 
-  addLight(x=0,y=0,z=0) {
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    this.scene.add(ambientLight);
-
+  addLight(x = 0, y = 0, z = 0) {
+    this.ambientLight = new THREE.AmbientLight(0x404040);
+    this.scene.add(this.ambientLight);
+  
     this.directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     this.directionalLight.position.set(x, y, z);
     this.directionalLight.castShadow = true;
     this.scene.add(this.directionalLight);
-
-    this.directionalLight.shadow.mapSize.width = 2048; 
+  
+    this.directionalLight.shadow.mapSize.width = 2048;
     this.directionalLight.shadow.mapSize.height = 2048;
-    this.directionalLight.shadow.camera.near = 0.5; 
+    this.directionalLight.shadow.camera.near = 0.5;
     this.directionalLight.shadow.camera.far = 50;
     this.directionalLight.shadow.camera.left = -50;
     this.directionalLight.shadow.camera.right = 50;
     this.directionalLight.shadow.camera.top = 50;
     this.directionalLight.shadow.camera.bottom = -50;
+  }
+
+  removeDirectionalLight() {
+    if (this.directionalLight) {
+      this.scene.remove(this.directionalLight);
+      this.directionalLight.dispose();
+      this.directionalLight = null;
+    }
+  }
+
+  addAmbientLight(intensity = 0.5, color = 0xffffff) {
+    this.ambientLight = new THREE.AmbientLight(color, intensity);
+    this.scene.add(this.ambientLight);
+  }
+
+  removeAmbientLight() {
+    if (this.ambientLight) {
+      this.scene.remove(this.ambientLight);
+      this.ambientLight.dispose();
+      this.ambientLight = null;
+    }
+  }
+
+  addHemisphereLight(skyColor = 0xffffbb, groundColor = 0x080820, intensity = 0.8) {
+    this.hemisphereLight = new THREE.HemisphereLight(skyColor, groundColor, intensity);
+    this.hemisphereLight.position.set(0, 10, 0);
+    this.scene.add(this.hemisphereLight);
+  }
+
+  removeHemisphereLight() {
+    if (this.hemisphereLight) {
+      this.scene.remove(this.hemisphereLight);
+      this.hemisphereLight.dispose();
+      this.hemisphereLight = null;
+    }
   }
 
   initForceSimulation() {
