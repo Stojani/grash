@@ -19,14 +19,20 @@ class Shaper {
     this.scene = new THREE.Scene();
     this.defaultBackgroundColor = new THREE.Color(0x000000);
     this.scene.background = this.defaultBackgroundColor;
-    //console.log("window: ");
-    //console.log(window);
-    this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight;
+
+    this.camera = new THREE.PerspectiveCamera(50, containerWidth / containerHeight, 0.1, 1000);
     this.camera.position.z = 15;
-    this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    this.renderer = new THREE.WebGLRenderer(); //{ antialias: true }
+    this.renderer.setSize(containerWidth, containerHeight);
     this.renderer.setClearColor(this.defaultBackgroundColor);
     this.renderer.shadowMap.enabled = true;
+    //this.renderer.setPixelRatio(window.devicePixelRatio * 2); // Supercampionamento
+    //this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limita a 2x
+
     this.container.appendChild(this.renderer.domElement);
 
     this.graph = new Graph(this.nodes, this.edges);
@@ -68,8 +74,22 @@ class Shaper {
     //const axesHelper = new THREE.AxesHelper(15);
     //this.scene.add(axesHelper);
 
+    window.addEventListener('resize', () => {
+      this.onWindowResize();
+    });
+
     this.initForceSimulation();
     this.animate();
+  }
+
+  onWindowResize() {
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight;
+
+    this.camera.aspect = containerWidth / containerHeight;
+    this.camera.updateProjectionMatrix();
+
+    this.renderer.setSize(containerWidth, containerHeight);
   }
 
   addLight(x = 0, y = 0, z = 0) {
