@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide, forceRadial } from 'd3-force';
 import Graph from '../model/Graph';
 import GraphInteractions from './GraphInteractions';
+import GraphOperations from './GraphOperations';
 import Node from '../model/Node';
 import Edge from '../model/Edge';
+import Path from '../model/Path';
 
 class Shaper {
   constructor(container, nodes, edges) {
@@ -17,7 +19,8 @@ class Shaper {
     this.scene = new THREE.Scene();
     this.defaultBackgroundColor = new THREE.Color(0x000000);
     this.scene.background = this.defaultBackgroundColor;
-
+    //console.log("window: ");
+    //console.log(window);
     this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.camera.position.z = 15;
     this.renderer = new THREE.WebGLRenderer();
@@ -323,11 +326,11 @@ class Shaper {
     this.camera.updateProjectionMatrix();
   }
 
-  setCameraSettings({ fov = 35, distance = 30, near = 0.1, far = 1000 }) {
+  setCameraSettings({ fov = 35, distance = 30, aspect = 50, near = 0.1, far = 1000 }) {
     if (!this.camera) return;
     
-    //this.camera.position.set(0, 0, distance);
-    //this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.position.set(0, -90, distance);
+    this.camera.aspect = aspect;
     this.camera.fov = fov;
     this.camera.near = near;
     this.camera.far = far;
@@ -336,7 +339,7 @@ class Shaper {
 
   resetCameraSettings() {
     if (!this.camera) return;
-    
+    this.camera.position.set(0, -90, 30);
     this.camera.fov = 50; //default
     this.camera.near = 0.1; //default
     this.camera.far = 2000; //default
@@ -475,6 +478,36 @@ class Shaper {
   resetExtrusion() {
     //this.stopSimulation();
     this.interactions.resetExtrusion();
+  }
+
+  extrudeShortestPath() {
+    if (this.interactions && 
+        this.interactions.selectedNodes &&
+        this.interactions.selectedNodes.length === 2) {
+  
+      const startNode = this.interactions.selectedNodes[0];
+      const targetNode = this.interactions.selectedNodes[1];
+  
+      const shortestPath = GraphOperations.findShortestPath(this.graph, startNode, targetNode);
+      
+      if (shortestPath && shortestPath.nodes.length > 0) {
+        this.shortestPath = shortestPath;
+        this.interactions.extrudePath(this.shortestPath.nodes, this.shortestPath.edges);
+      } else {
+        console.error("No path found between the selected nodes.");
+      }
+    } else {
+      console.error("Select exactly 2 nodes");
+    }
+  }
+  
+  resetShortestPathExtrusion() {
+    if (this.shortestPath) {
+      this.interactions.resetPathExtrusion(this.shortestPath.nodes, this.shortestPath.edges);
+      this.shortestPath = null;
+    } else {
+      console.error("No path to reset.");
+    }
   }
 
 

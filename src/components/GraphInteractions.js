@@ -412,7 +412,7 @@ class GraphInteractions {
   }
 
   //NODES EXTRUSION
-  extrudeNodeAsMushroomWithStem(node, finalZ = 1) {
+  extrudeNodeAsMushroomWithStem(node, finalZ = 0.5) {
     const duration = 2000;
     const initialZ = node.mesh.position.z;
     const startTime = performance.now();
@@ -451,7 +451,7 @@ class GraphInteractions {
   resetNodeExtrusion(node, duration = 2000) {
     const stem = node.extrusionStem;
     const finalZ = node.mesh.position.z;
-    const initialZ = finalZ - 1;
+    const initialZ = finalZ - 0.5;
     const startTime = performance.now();
     const height = Math.abs(finalZ - initialZ);
 
@@ -497,7 +497,7 @@ class GraphInteractions {
   }
 
   //ESDGES EXTRUSION
-  extrudeEdgeAsBox(edge, finalZ = 1) {
+  extrudeEdgeAsBox(edge, finalZ = 0.5) {
     const duration = 2000;
     const startZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
     const initialZ = startZ;
@@ -545,7 +545,7 @@ class GraphInteractions {
   resetEdgeExtrusion(edge, duration = 2000) {
     const box = edge.extrusionBox;
     const finalZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
-    const initialZ = finalZ - 1;
+    const initialZ = finalZ - 0.5;
     const startTime = performance.now();
 
     const animateReset = (currentTime) => {
@@ -593,6 +593,16 @@ class GraphInteractions {
     const nodesToReset = [...this.selectedNodes];
     this.resetNodesExtrusion(nodesToReset);
     const edgesToReset = [...this.selectedEdges];
+    this.resetEdgesExtrusion(edgesToReset);
+  }
+
+  extrudePath(nodesToExtrude, edgesToExtrude) {
+    this.extrudeNodes(nodesToExtrude);
+    this.extrudeEdges(edgesToExtrude);
+  }
+
+  resetPathExtrusion(nodesToReset, edgesToReset) {
+    this.resetNodesExtrusion(nodesToReset);
     this.resetEdgesExtrusion(edgesToReset);
   }
 
