@@ -24,17 +24,17 @@ class GraphInteractions {
 
   initOrbitControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.25;
-    this.controls.rotateSpeed = 0.3;
-    this.controls.zoomSpeed = 0.9;
-    this.controls.panSpeed = 0.8;
-    this.controls.minPolarAngle = Math.PI / 4;
-    this.controls.maxPolarAngle = Math.PI - Math.PI / 4;
-    this.controls.minDistance = 1;
-    this.controls.maxDistance = 100;
-    this.controls.enablePan = true;
-    this.controls.screenSpacePanning = true;
+    //this.controls.enableDamping = true;
+    //this.controls.dampingFactor = 0.25;
+    //this.controls.rotateSpeed = 0.3;
+    //this.controls.zoomSpeed = 0.9;
+    //this.controls.panSpeed = 0.8;
+    //this.controls.minPolarAngle = Math.PI / 4;
+    //this.controls.maxPolarAngle = Math.PI - Math.PI / 4;
+    //this.controls.minDistance = 1;
+    //this.controls.maxDistance = 1000;
+    //this.controls.enablePan = true;
+    //this.controls.screenSpacePanning = true;
   }
 
   addEventListeners() {

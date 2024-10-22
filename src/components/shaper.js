@@ -23,15 +23,15 @@ class Shaper {
     const containerWidth = this.container.clientWidth;
     const containerHeight = this.container.clientHeight;
 
-    this.camera = new THREE.PerspectiveCamera(50, containerWidth / containerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(50, containerWidth / containerHeight, 0.1, 2000);
     this.camera.position.z = 15;
 
-    this.renderer = new THREE.WebGLRenderer(); //{ antialias: true }
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(containerWidth, containerHeight);
     this.renderer.setClearColor(this.defaultBackgroundColor);
     this.renderer.shadowMap.enabled = true;
     //this.renderer.setPixelRatio(window.devicePixelRatio * 2); // Supercampionamento
-    //this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limita a 2x
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limita a 2x
 
     this.container.appendChild(this.renderer.domElement);
 
@@ -83,13 +83,17 @@ class Shaper {
   }
 
   onWindowResize() {
-    const containerWidth = this.container.clientWidth;
-    const containerHeight = this.container.clientHeight;
-
-    this.camera.aspect = containerWidth / containerHeight;
-    this.camera.updateProjectionMatrix();
-
-    this.renderer.setSize(containerWidth, containerHeight);
+    if (this.container) {
+      const containerWidth = this.container.clientWidth;
+      const containerHeight = this.container.clientHeight;
+      if (this.camera) {
+        this.camera.aspect = containerWidth / containerHeight;
+        this.camera.updateProjectionMatrix();
+      }
+      if (this.renderer) {
+        this.renderer.setSize(containerWidth, containerHeight);
+      }
+    }
   }
 
   addLight(x = 0, y = 0, z = 0) {
@@ -346,23 +350,35 @@ class Shaper {
     this.camera.updateProjectionMatrix();
   }
 
-  setCameraSettings({ fov = 35, distance = 30, aspect = 50, near = 0.1, far = 1000 }) {
+  setCameraSettings({ fov = 50, aspect = 1, near = 0.1, far = 2000, distance = 30 }) {
     if (!this.camera) return;
     
-    this.camera.position.set(0, -90, distance);
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight;
+    console.log("containerWidth: "+containerWidth);
+    console.log("containerHeight: "+containerHeight);
+
+    //this.camera.aspect = containerWidth / containerHeight;
     this.camera.aspect = aspect;
     this.camera.fov = fov;
     this.camera.near = near;
     this.camera.far = far;
+    
+    this.camera.position.set(0, -distance, distance);
+    
     this.camera.updateProjectionMatrix();
   }
 
-  resetCameraSettings() {
+  resetCameraSettings(distance = 50) {
     if (!this.camera) return;
-    this.camera.position.set(0, -90, 30);
-    this.camera.fov = 50; //default
-    this.camera.near = 0.1; //default
-    this.camera.far = 2000; //default
+    this.camera.position.set(0, -distance, distance);
+    this.camera.fov = 50;
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight;
+    this.camera.aspect = containerWidth / containerHeight;
+    //this.camera.aspect = aspect;
+    this.camera.near = 0.1;
+    this.camera.far = 2000;
     this.camera.updateProjectionMatrix();
   }
 
