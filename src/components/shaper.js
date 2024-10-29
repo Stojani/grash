@@ -52,7 +52,7 @@ class Shaper {
     const textureLoader = new THREE.TextureLoader();
     const paperTexture = textureLoader.load('assets/watercolor-paper-texture.jpg');
 
-    this.tabletGeometry = new THREE.BoxGeometry(100, 100, 0.5);
+    this.tabletGeometry = new THREE.BoxGeometry(70, 70, 0.5);
     this.tabletMaterial = new THREE.MeshStandardMaterial({
       map: paperTexture,
       bumpMap: paperTexture,
@@ -358,13 +358,13 @@ class Shaper {
     console.log("containerWidth: "+containerWidth);
     console.log("containerHeight: "+containerHeight);
 
-    //this.camera.aspect = containerWidth / containerHeight;
-    this.camera.aspect = aspect;
+    this.camera.aspect = containerWidth / containerHeight;
+    //this.camera.aspect = aspect;
     this.camera.fov = fov;
     this.camera.near = near;
     this.camera.far = far;
     
-    this.camera.position.set(0, -distance, distance);
+    this.camera.position.set(0, -distance, distance*0.5);
     
     this.camera.updateProjectionMatrix();
   }
