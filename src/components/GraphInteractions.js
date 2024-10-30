@@ -496,7 +496,7 @@ class GraphInteractions {
     this.extrudeNodes(nodesToExtrude);
   }
 
-  //ESDGES EXTRUSION
+  //EDGES EXTRUSION
   extrudeEdgeAsBox(edge, finalZ = 0.5) {
     const duration = 2000;
     const startZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
@@ -510,7 +510,8 @@ class GraphInteractions {
     const depth = 0.05;
 
     const boxGeometry = new THREE.BoxGeometry(finalZ, depth, distance);
-    const boxMaterial = new THREE.MeshStandardMaterial({ color: '#999999', transparent: true, opacity: 0.8 });
+    //colors: grey: #999999 ---- gold-yellow: #f2de05
+    const boxMaterial = new THREE.MeshStandardMaterial({ color: '#f2de05', transparent: true, opacity: 0.8 });
     const box = new THREE.Mesh(boxGeometry, boxMaterial);
 
     const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
@@ -572,15 +573,111 @@ class GraphInteractions {
     requestAnimationFrame(animateReset);
   }
 
+  //EDGES EXTRUSION AS TRAPEZIO
+  extrudeEdgeAsTrapezoid(edge, finalZ = 0.5) {
+    const duration = 2000;
+    const startZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
+    const initialZ = startZ;
+    const startTime = performance.now();
+
+    const start = edge.source.mesh.position;
+    const end = edge.target.mesh.position;
+    const distance = start.distanceTo(end);
+
+    const baseRadius = 0.10;
+    const topRadius = 0.05;
+
+    let trapezoidGeometry = new THREE.CylinderGeometry(
+        topRadius,
+        baseRadius,
+        0.5,
+        4,
+        1,
+        false,
+        Math.PI / 4
+    );
+
+    trapezoidGeometry.rotateX(Math.PI / 2);
+
+    const trapezoidMaterial = new THREE.MeshStandardMaterial({ color: '#f2de05', transparent: true, opacity: 0.8 });
+    const trapezoid = new THREE.Mesh(trapezoidGeometry, trapezoidMaterial);
+
+    //const axesHelper = new THREE.AxesHelper(2);
+    //trapezoid.add(axesHelper.clone())
+
+    const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    trapezoid.position.copy(midPoint);
+    trapezoid.position.z = initialZ;
+
+    const angleY = Math.atan2(end.y - start.y, end.x - start.x);
+    trapezoid.rotation.z = angleY;
+
+    trapezoid.scale.z = 0;
+    trapezoid.scale.x = distance*7;
+    trapezoid.scale.y = 1.7;
+
+    this.scene.add(trapezoid);
+    edge.extrusionTrapezoid = trapezoid;
+
+    const animate = (currentTime) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+
+        const z = initialZ + progress * (finalZ - initialZ);
+        edge.mesh.position.z = z;
+
+        trapezoid.scale.z = progress;
+        trapezoid.position.z = initialZ + (progress * finalZ) / 2;
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    };
+
+    requestAnimationFrame(animate);
+  }
+
+  resetEdgeExtrusionTrapezoid(edge, duration = 2000) {
+    const trapezoid = edge.extrusionTrapezoid;
+    const finalZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
+    const initialZ = finalZ - 0.5;
+    const startTime = performance.now();
+
+    const animateReset = (currentTime) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+
+        edge.mesh.position.z = finalZ - progress * (finalZ - initialZ);
+      
+        trapezoid.position.z = (finalZ * (1 - progress)) / 2;
+        trapezoid.scale.z = 1 - progress;
+
+        if (progress >= 1) {
+            this.scene.remove(trapezoid);
+            trapezoid.geometry.dispose();
+            trapezoid.material.dispose();
+            edge.extrusionTrapezoid = null;
+        }
+
+        if (progress < 1) {
+            requestAnimationFrame(animateReset);
+        }
+    };
+
+    requestAnimationFrame(animateReset);
+  }
+
   extrudeEdges(edges) {
     edges.forEach(edge => {
-        this.extrudeEdgeAsBox(edge);
+        //this.extrudeEdgeAsBox(edge);
+        this.extrudeEdgeAsTrapezoid(edge);
     });
   }
 
   resetEdgesExtrusion(edges) {
     edges.forEach(edge => {
-        this.resetEdgeExtrusion(edge);
+        //this.resetEdgeExtrusion(edge);
+        this.resetEdgeExtrusionTrapezoid(edge);      
     });
   }
 

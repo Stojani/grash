@@ -52,7 +52,7 @@ class Shaper {
     const textureLoader = new THREE.TextureLoader();
     const paperTexture = textureLoader.load('assets/watercolor-paper-texture.jpg');
 
-    this.tabletGeometry = new THREE.BoxGeometry(70, 70, 0.5);
+    this.tabletGeometry = new THREE.BoxGeometry(60, 60, 0.8);
     this.tabletMaterial = new THREE.MeshStandardMaterial({
       map: paperTexture,
       bumpMap: paperTexture,
