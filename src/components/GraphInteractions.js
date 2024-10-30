@@ -242,6 +242,48 @@ class GraphInteractions {
     this.controls.enableRotate = false;
   }
 
+  enableRotationAroundTest() {
+    this.controls.enableRotate = true;
+
+    // Permette la rotazione completa sull'asse azimutale attorno a Z
+    this.controls.minAzimuthAngle = -Infinity;
+    this.controls.maxAzimuthAngle = Infinity;
+
+    // Blocca l'angolo polare per mantenere la vista sul piano YZ
+    this.controls.minPolarAngle = Math.PI / 2;
+    this.controls.maxPolarAngle = Math.PI / 2;
+
+    // Disabilita la panoramica per evitare spostamenti laterali della camera
+    this.controls.enablePan = false;
+  }
+
+  enableRotationAroundY() {
+    this.controls.enableRotate = true;
+    this.controls.minAzimuthAngle = -Infinity;
+    this.controls.maxAzimuthAngle = Infinity;
+    this.controls.minPolarAngle = 0; // Blocca movimenti sull'asse Z (zenitale)
+    this.controls.maxPolarAngle = Math.PI; // Mantiene la rotazione libera su Y
+  }
+
+  disableRotationAroundY() {
+    this.controls.enableRotate = false;
+    this.controls.minPolarAngle = 0; // Permette di tornare alle rotazioni libere su X, Y e Z
+    this.controls.maxPolarAngle = Math.PI;
+  }
+
+  enableRotationAroundZ() {
+    this.controls.enableRotate = true;
+    this.controls.minAzimuthAngle = -Infinity;
+    this.controls.minPolarAngle = Math.PI / 2; // Blocca rotazione su X e Y
+    this.controls.maxPolarAngle = Math.PI / 2;
+  }
+
+  disableRotationAroundZ() {
+    this.controls.enableRotate = false;
+    this.controls.minPolarAngle = 0; // Permette rotazioni libere su X e Y
+    this.controls.maxPolarAngle = Math.PI;
+  }
+
   enableMousePanning() {
     this.controls.enablePan = true;
   }

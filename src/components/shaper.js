@@ -50,21 +50,38 @@ class Shaper {
     });
 
     const textureLoader = new THREE.TextureLoader();
-    const paperTexture = textureLoader.load('assets/watercolor-paper-texture.jpg');
+    const paperTexture = textureLoader.load('assets/paper3.jpg');
+    const sideTexture = textureLoader.load('assets/bamboo.jpg');
 
-    this.tabletGeometry = new THREE.BoxGeometry(60, 60, 0.8);
-    this.tabletMaterial = new THREE.MeshStandardMaterial({
+    const frontMaterial = new THREE.MeshStandardMaterial({
       map: paperTexture,
       bumpMap: paperTexture,
       bumpScale: 0.05,
       roughness: 0.9,
-      side: THREE.DoubleSide
     });
 
-    this.tablet = new THREE.Mesh(this.tabletGeometry, this.tabletMaterial);
+    const sideMaterial = new THREE.MeshStandardMaterial({
+      map: sideTexture,
+      bumpMap: sideTexture,
+      bumpScale: 0.05,
+      roughness: 0.9,
+    });
+
+    this.tabletGeometry = new THREE.BoxGeometry(60, 60, 0.8);
+    const materials = [
+      sideMaterial, // faccia frontale
+      sideMaterial,  // faccia posteriore
+      sideMaterial,  // faccia sinistra
+      sideMaterial,  // faccia destra
+      frontMaterial,  // faccia superiore
+      sideMaterial,  // faccia inferiore
+    ];
+    this.tablet = new THREE.Mesh(this.tabletGeometry, materials); // Usa direttamente l'array di materiali
+
+    // Imposta la posizione e aggiungi alla scena
     this.tablet.position.z = -1;
     this.tablet.visible = false;
-    //this.tablet.receiveShadow = true;
+    // this.tablet.receiveShadow = true;
     this.scene.add(this.tablet);
 
     this.interactions = new GraphInteractions(this.camera, this.renderer, this.scene, this.nodes, this.edges);
@@ -292,6 +309,17 @@ class Shaper {
     this.renderer.setClearColor(this.defaultBackgroundColor);
   }
 
+  autoRotateCameraAroundX() {
+    if (!this.renderer) return;
+    this.autoRotate = true;
+    this.renderer.setAnimationLoop(() => {
+      if (this.scene) {
+        this.scene.rotation.x += 0.01;
+        this.renderer.render(this.scene, this.camera);
+      }
+    });
+  }
+
   autoRotateCamera() {
     if (!this.renderer) return;
     this.autoRotate = true;
@@ -299,6 +327,20 @@ class Shaper {
       if (this.scene) {
         this.scene.rotation.y += 0.01;
         this.renderer.render(this.scene, this.camera);
+      }
+    });
+  }
+
+  autoRotateCameraAroundZ() {
+    if (!this.renderer) return;
+    this.autoRotate = true;
+    this.renderer.setAnimationLoop(() => {
+      if (this.scene) {
+        this.scene.rotation.z += 0.01;
+        this.renderer.render(this.scene, this.camera);
+        console.log("X: "+this.camera.position.x)
+        console.log("Y: "+this.camera.position.y)
+        console.log("Z: "+this.camera.position.z)
       }
     });
   }
