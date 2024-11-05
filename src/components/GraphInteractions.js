@@ -709,17 +709,110 @@ class GraphInteractions {
     requestAnimationFrame(animateReset);
   }
 
+  //EDGES EXTRUSION AS CUSTOM TRAPEZOID
+  extrudeEdgeAsCustomTrapezoid(edge, finalZ = 0.5) {
+    const duration = 2000;
+    const initialZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
+    const startTime = performance.now();
+
+    const start = edge.source.mesh.position;
+    const end = edge.target.mesh.position;
+    const distance = start.distanceTo(end);
+
+    const baseWidth = 0.30;
+    const topWidth = 0.05;
+    const height = 0.5;
+
+    // Crea un trapezio isoscele usando un oggetto Shape
+    const shape = new THREE.Shape();
+    shape.moveTo(-baseWidth / 2, 0);
+    shape.lineTo(baseWidth / 2, 0);
+    shape.lineTo(topWidth / 2, height);
+    shape.lineTo(-topWidth / 2, height);
+    shape.closePath();
+
+    // Estrudi la forma per dare profondità e creare il trapezoid
+    const trapezoidGeometry = new THREE.ExtrudeGeometry(shape, {
+        depth: distance,
+        bevelEnabled: false
+    });
+
+    const trapezoidMaterial = new THREE.MeshStandardMaterial({ color: '#f2de05', transparent: true, opacity: 0.8 });
+    const trapezoid = new THREE.Mesh(trapezoidGeometry, trapezoidMaterial);
+
+    //const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    //trapezoid.position.set(midPoint.x, midPoint.y, initialZ);
+    //trapezoid.position.copy(midPoint);
+    //trapezoid.position.z = initialZ;
+    trapezoid.position.copy(end);
+
+    const orientation = new THREE.Matrix4();
+    orientation.lookAt(start, end, new THREE.Vector3(0, 0, 1));
+    trapezoid.quaternion.setFromRotationMatrix(orientation);
+
+    trapezoid.scale.y = 0;
+    this.scene.add(trapezoid);
+    edge.extrusionTrapezoid = trapezoid;
+
+    const animate = (currentTime) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+
+        const z = initialZ + progress * (finalZ - initialZ);
+        edge.mesh.position.z = z;
+
+        trapezoid.scale.y = progress;
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    };
+
+    requestAnimationFrame(animate);
+  }
+
+  resetEdgeExtrusionAsCustomTrapezoid(edge, duration = 2000) {
+    const trapezoid = edge.extrusionTrapezoid;
+    const finalZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
+    const initialZ = finalZ - 0.5;
+    const startTime = performance.now();
+
+    const animateReset = (currentTime) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+
+        edge.mesh.position.z = finalZ - progress * (finalZ - initialZ);
+      
+        trapezoid.scale.y = 1 - progress;
+
+        if (progress >= 1) {
+            this.scene.remove(trapezoid);
+            trapezoid.geometry.dispose();
+            trapezoid.material.dispose();
+            edge.extrusionTrapezoid = null;
+        }
+
+        if (progress < 1) {
+            requestAnimationFrame(animateReset);
+        }
+    };
+
+    requestAnimationFrame(animateReset);
+  }
+
   extrudeEdges(edges) {
     edges.forEach(edge => {
         //this.extrudeEdgeAsBox(edge);
-        this.extrudeEdgeAsTrapezoid(edge);
+        //this.extrudeEdgeAsTrapezoid(edge);
+        this.extrudeEdgeAsCustomTrapezoid(edge);
     });
   }
 
   resetEdgesExtrusion(edges) {
     edges.forEach(edge => {
         //this.resetEdgeExtrusion(edge);
-        this.resetEdgeExtrusionTrapezoid(edge);      
+        //this.resetEdgeExtrusionTrapezoid(edge);
+        this.resetEdgeExtrusionAsCustomTrapezoid(edge); 
     });
   }
 
