@@ -96,7 +96,31 @@ class Shaper {
     });
 
     this.initForceSimulation();
+    
     this.animate();
+
+    //this.updateTabletSizeAfterSimulation();
+  }
+
+  updateTabletSizeAfterSimulation() {
+    let maxDistance = 0;
+
+    this.nodes.forEach(node => {
+        const absX = Math.abs(node.mesh.position.x);
+        const absY = Math.abs(node.mesh.position.y);
+        //console.log(node.mesh.position.x + ";" + node.mesh.position.y);
+        maxDistance = Math.max(maxDistance, absX, absY);
+        //console.log("maxDistance: "+maxDistance);
+    });
+
+    const padding = 10;
+    const size = (maxDistance * 2) + padding;
+    //console.log("size: "+size);
+
+    this.tablet.geometry.dispose();
+    this.tablet.geometry = new THREE.BoxGeometry(size, size, 0.8);
+
+    this.tablet.position.set(0, 0, -1);
   }
 
   onWindowResize() {
@@ -230,6 +254,11 @@ class Shaper {
     });
 
     this.edges.forEach(edge => edge.updateGeometry());
+
+    if (this.simulation.alpha() < 0.02) {  // Soglia di stabilità della simulazione
+      this.updateTabletSizeAfterSimulation();
+      this.stopSimulation(); // Ferma la simulazione per evitare aggiornamenti continui
+    }
 
     /*
     if (this.interactions.nodeInfoPopUp) {
@@ -397,8 +426,8 @@ class Shaper {
     
     const containerWidth = this.container.clientWidth;
     const containerHeight = this.container.clientHeight;
-    console.log("containerWidth: "+containerWidth);
-    console.log("containerHeight: "+containerHeight);
+    //console.log("containerWidth: "+containerWidth);
+    //console.log("containerHeight: "+containerHeight);
 
     this.camera.aspect = containerWidth / containerHeight;
     //this.camera.aspect = aspect;

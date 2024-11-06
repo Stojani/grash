@@ -723,7 +723,6 @@ class GraphInteractions {
     const topWidth = 0.05;
     const height = 0.5;
 
-    // Crea un trapezio isoscele usando un oggetto Shape
     const shape = new THREE.Shape();
     shape.moveTo(-baseWidth / 2, 0);
     shape.lineTo(baseWidth / 2, 0);
@@ -731,7 +730,6 @@ class GraphInteractions {
     shape.lineTo(-topWidth / 2, height);
     shape.closePath();
 
-    // Estrudi la forma per dare profondità e creare il trapezoid
     const trapezoidGeometry = new THREE.ExtrudeGeometry(shape, {
         depth: distance,
         bevelEnabled: false
@@ -740,10 +738,6 @@ class GraphInteractions {
     const trapezoidMaterial = new THREE.MeshStandardMaterial({ color: '#f2de05', transparent: true, opacity: 0.8 });
     const trapezoid = new THREE.Mesh(trapezoidGeometry, trapezoidMaterial);
 
-    //const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-    //trapezoid.position.set(midPoint.x, midPoint.y, initialZ);
-    //trapezoid.position.copy(midPoint);
-    //trapezoid.position.z = initialZ;
     trapezoid.position.copy(end);
 
     const orientation = new THREE.Matrix4();
