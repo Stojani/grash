@@ -3,9 +3,10 @@ import * as THREE from 'three';
 class Edge {
   static DEFAULT_COLOR = '#ffff66'; // '#cccccc'; Very light grey //'#ffff66'; //yellow
 
-  constructor(source, target) {
+  constructor(source, target, weight=1) {
     this.source = source;
     this.target = target;
+    this.weight= weight;
     this.extrusionBox = null;
 
     // Crea un nuovo materiale per ogni arco

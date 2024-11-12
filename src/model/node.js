@@ -4,8 +4,9 @@ class Node {
   static DEFAULT_COLOR = '#0080ff'; //blue
   static DEFAULT_GEOMETRY = new THREE.SphereGeometry(0.3, 32, 32);
 
-  constructor(id, x = 0, y = 0, z = 0, color = Node.DEFAULT_COLOR, geometry = Node.DEFAULT_GEOMETRY) {
+  constructor(id, group = 0, x = 0, y = 0, z = 0, color = Node.DEFAULT_COLOR, geometry = Node.DEFAULT_GEOMETRY) {
     this._id = id;
+    this.group = group;
     this.x = x;
     this.y = y;
     this.z = z;

@@ -533,7 +533,7 @@ class Shaper {
       }
     }
   
-    const newNode = new Node(newId.toString(), x, y, z);
+    const newNode = new Node(newId.toString(), 0, x, y, z);
     this.nodes.push(newNode);
     this.scene.add(newNode.mesh);
   
@@ -561,7 +561,7 @@ class Shaper {
     }
 
     // Crea un nuovo arco (Edge) tra i due nodi
-    const newEdge = new Edge(sourceNode, targetNode);
+    const newEdge = new Edge(sourceNode, targetNode, 1);
 
     // Aggiungi l'arco alla scena
     this.edges.push(newEdge);
@@ -615,6 +615,49 @@ class Shaper {
     } else {
       console.error("No path to reset.");
     }
+  }
+
+  extrudeNodesByGroup() {
+    this.interactions.extrudeNodesByGroup(this.graph.nodes);
+  }
+
+  resetNodesExtrusionByGroup() {
+    this.interactions.resetNodesExtrusionByGroup(this.graph.nodes);
+  }
+
+  colorNodesByGroup() {
+    const groupColorMap = new Map();
+    const colorPalette = this.generateColorPalette(10);
+    //['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#33FFF5', '#F5FF33', '#FF8C33', '#B833FF'];
+    let colorIndex = 0;
+
+    this.nodes.forEach(node => {
+        const group = node.group;
+
+        if (!groupColorMap.has(group)) {
+            const color = colorPalette[colorIndex % colorPalette.length];
+            groupColorMap.set(group, color);
+            colorIndex++;
+        }
+
+        const groupColor = groupColorMap.get(group);
+        node.color = groupColor;
+    });
+  }
+
+  generateColorPalette(numColors) {
+    const colors = [];
+    for (let i = 0; i < numColors; i++) {
+        const hue = (i * 360 / numColors) % 360;
+        colors.push(`hsl(${hue}, 70%, 50%)`);
+    }
+    return colors;
+}
+
+  resetNodesColors() {
+    this.nodes.forEach(node => {
+      node.color = node.originalColor;
+    });
   }
 
 

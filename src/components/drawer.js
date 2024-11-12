@@ -4,7 +4,7 @@ import Edge from '../model/Edge';
 class Drawer {
   static fromJSON(jsonData) {
     const nodes = jsonData.nodes.map(nodeData => {
-      const node = new Node(nodeData.id, nodeData.x, nodeData.y, nodeData.z, nodeData.color, nodeData.geometry);
+      const node = new Node(nodeData.id, nodeData.group, nodeData.x, nodeData.y, nodeData.z, nodeData.color, nodeData.geometry);
       if (!node.mesh) {
         console.error(`Node with ID ${nodeData.id} has no mesh.`);
       }
@@ -18,7 +18,7 @@ class Drawer {
         console.error(`Cannot create edge: one or both nodes are invalid.`);
         return null;
       }
-      return new Edge(source, target);
+      return new Edge(source, target, edgeData.value);
     }).filter(edge => edge !== null);
 
     return { nodes, edges };

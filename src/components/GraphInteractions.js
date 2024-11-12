@@ -454,15 +454,14 @@ class GraphInteractions {
   }
 
   //NODES EXTRUSION
-  extrudeNodeAsMushroomWithStem(node, finalZ = 0.5) {
-    const duration = 2000;
+  extrudeNodeAsMushroomWithStem(node, extrusionHeight = 0.5, duration = 2000) {
     const initialZ = node.mesh.position.z;
     const startTime = performance.now();
   
     const baseRadius = 0.3;
     const topRadius = 0.15;
   
-    const height = Math.abs(finalZ - initialZ);
+    const height = Math.abs(extrusionHeight - initialZ);
     const stemGeometry = new THREE.CylinderGeometry(topRadius, baseRadius,  height, 32);
     const stemMaterial = new THREE.MeshStandardMaterial({ color: '#999999', transparent: true, opacity: 0.8 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
@@ -476,7 +475,7 @@ class GraphInteractions {
       const elapsedTime = currentTime - startTime;
       const progress = Math.min(elapsedTime / duration, 1);
   
-      const z = initialZ + progress * (finalZ - initialZ);
+      const z = initialZ + progress * (extrusionHeight - initialZ);
       node.mesh.position.z = z;
   
       stem.scale.y = progress;
@@ -490,10 +489,10 @@ class GraphInteractions {
     requestAnimationFrame(animate);
   }
 
-  resetNodeExtrusion(node, duration = 2000) {
+  resetNodeExtrusion(node, extrusionHeight = 0.5, duration = 2000) {
     const stem = node.extrusionStem;
     const finalZ = node.mesh.position.z;
-    const initialZ = finalZ - 0.5;
+    const initialZ = finalZ - extrusionHeight;
     const startTime = performance.now();
     const height = Math.abs(finalZ - initialZ);
 
@@ -530,6 +529,18 @@ class GraphInteractions {
   resetNodesExtrusion(nodes) {
     nodes.forEach(node => {
       this.resetNodeExtrusion(node);
+    });
+  }
+
+  extrudeNodesByGroup(nodes) {
+    nodes.forEach(node => {
+      this.extrudeNodeAsMushroomWithStem(node, node.group);
+    });
+  }
+
+  resetNodesExtrusionByGroup(nodes) {
+    nodes.forEach(node => {
+      this.resetNodeExtrusion(node, node.group);
     });
   }
 
