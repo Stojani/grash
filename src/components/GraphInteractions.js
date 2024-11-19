@@ -520,6 +520,63 @@ class GraphInteractions {
     requestAnimationFrame(animateReset);
   }
 
+  liftEdgeByGroup(edge, duration = 2000) {
+
+    const sourceGroup = edge.source.group;
+    const targetGroup = edge.target.group;
+
+    if (sourceGroup === targetGroup) {
+        const groupHeight = sourceGroup;
+        const initialZ = (edge.source.mesh.position.z + edge.target.mesh.position.z) / 2;
+        const finalZ = groupHeight;
+
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+
+            const newZ = initialZ + progress * (finalZ - initialZ);
+
+            edge.mesh.position.z = newZ;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+  }
+
+  resetEdgeLiftByGroup(edge, duration = 2000) {
+
+    const sourceGroup = edge.source.group;
+    const targetGroup = edge.target.group;
+
+    if (sourceGroup === targetGroup) {
+      const initialZ = edge.mesh.position.z;
+      const finalZ = 0;
+
+      const startTime = performance.now();
+
+      const animateReset = (currentTime) => {
+          const elapsedTime = currentTime - startTime;
+          const progress = Math.min(elapsedTime / duration, 1);
+
+          const newZ = initialZ + progress * (finalZ - initialZ);
+          edge.mesh.position.z = newZ;
+
+          if (progress < 1) {
+              requestAnimationFrame(animateReset);
+          }
+      };
+
+      requestAnimationFrame(animateReset);
+    }
+    
+  }
+
   extrudeNodes(nodes) {
     nodes.forEach(node => {
       this.extrudeNodeAsMushroomWithStem(node);
@@ -535,6 +592,18 @@ class GraphInteractions {
   extrudeNodesByGroup(nodes) {
     nodes.forEach(node => {
       this.extrudeNodeAsMushroomWithStem(node, node.group);
+    });
+  }
+
+  liftEdgesByGroup(edges) {
+    edges.forEach(edge => {
+      this.liftEdgeByGroup(edge);
+    });
+  }
+
+  resetEdgesLiftByGroup(edges) {
+    edges.forEach(edge => {
+      this.resetEdgeLiftByGroup(edge);
     });
   }
 

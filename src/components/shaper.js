@@ -621,8 +621,35 @@ class Shaper {
     this.interactions.extrudeNodesByGroup(this.graph.nodes);
   }
 
+  liftEdgesByGroup() {
+    this.interactions.liftEdgesByGroup(this.graph.edges);
+  }
+
+  extrudeByGroups() {
+    this.extrudeNodesByGroup();
+    this.liftEdgesByGroup();
+  }
+
   resetNodesExtrusionByGroup() {
     this.interactions.resetNodesExtrusionByGroup(this.graph.nodes);
+  }
+
+  resetEdgesLiftByGroup() {
+    this.interactions.resetEdgesLiftByGroup(this.graph.edges);
+  }
+
+  resetExtrusionByGroup() {
+    this.resetNodesExtrusionByGroup();
+    this.resetEdgesLiftByGroup();
+  }
+
+  generateColorPalette(numColors) {
+    const colors = [];
+    for (let i = 0; i < numColors; i++) {
+        const hue = (i * 360 / numColors) % 360;
+        colors.push(`hsl(${hue}, 70%, 50%)`);
+    }
+    return colors;
   }
 
   colorNodesByGroup() {
@@ -645,18 +672,44 @@ class Shaper {
     });
   }
 
-  generateColorPalette(numColors) {
-    const colors = [];
-    for (let i = 0; i < numColors; i++) {
-        const hue = (i * 360 / numColors) % 360;
-        colors.push(`hsl(${hue}, 70%, 50%)`);
-    }
-    return colors;
-}
-
   resetNodesColors() {
     this.nodes.forEach(node => {
       node.color = node.originalColor;
+    });
+  }
+
+  colorEdgesByGroup() {
+    const groupColorMap = new Map();
+    const colorPalette = this.generateColorPalette(10);
+    let colorIndex = 0;
+
+    this.nodes.forEach(node => {
+        const group = node.group;
+        if (!groupColorMap.has(group)) {
+            const color = colorPalette[colorIndex % colorPalette.length];
+            groupColorMap.set(group, color);
+            colorIndex++;
+        }
+    });
+
+    this.edges.forEach(edge => {
+
+      edge.originalColor = edge.mesh.material.color.getHex();;
+      const sourceGroup = edge.source.group;
+      const targetGroup = edge.target.group;
+
+      if (sourceGroup === targetGroup && groupColorMap.has(sourceGroup)) {
+          const groupColor = groupColorMap.get(sourceGroup);
+          edge.mesh.material.color.set(groupColor);
+      } else {
+          edge.mesh.material.color.set(edge.originalColor || '#808080');
+      }
+    });
+  }
+
+  resetEdgesColors() {
+    this.edges.forEach(edge => {
+      edge.mesh.material.color.set(edge.originalColor);
     });
   }
 
