@@ -528,6 +528,59 @@ class GraphInteractions {
     requestAnimationFrame(animateReset);
   }
 
+  resetGenericNodeExtrusion(node, duration = 2000) {
+    const stem = node.extrusionStem;
+    const finalZ = node.mesh.position.z;
+    const initialZ = 0;
+    const startTime = performance.now();
+    const height = Math.abs(finalZ - initialZ);
+
+    const animateReset = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+
+      node.mesh.position.z = finalZ - progress * (finalZ - initialZ);
+
+      stem.scale.y = 1 - progress;
+      stem.position.z = (height * (1 - progress)) / 2;
+
+      if (progress >= 1) {
+        this.scene.remove(stem);
+        stem.geometry.dispose();
+        stem.material.dispose();
+        node.extrusionStem = null;
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animateReset);
+      }
+    };
+  
+    requestAnimationFrame(animateReset);
+  }
+
+  liftEdge(edge, height = 0.5, duration = 2000) {
+
+    const initialZ = edge.mesh.position.z;
+    const finalZ = height;
+
+    const startTime = performance.now();
+
+    const animate = (currentTime) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+
+      const newZ = initialZ + progress * (finalZ - initialZ);
+      edge.mesh.position.z = newZ;
+
+      if (progress < 1) {
+          requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
+
   liftEdgeByGroup(edge, duration = 2000) {
 
     const sourceGroup = edge.source.group;
@@ -585,6 +638,27 @@ class GraphInteractions {
     
   }
 
+  resetGenericEdgeLift(edge, duration = 2000) {
+    const initialZ = edge.mesh.position.z;
+    const finalZ = 0;
+
+    const startTime = performance.now();
+
+    const animateReset = (currentTime) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+
+        const newZ = initialZ + progress * (finalZ - initialZ);
+        edge.mesh.position.z = newZ;
+
+        if (progress < 1) {
+            requestAnimationFrame(animateReset);
+        }
+    };
+
+    requestAnimationFrame(animateReset);
+  }
+
   extrudeNodes(nodes) {
     nodes.forEach(node => {
       this.extrudeNodeAsMushroomWithStem(node);
@@ -597,28 +671,60 @@ class GraphInteractions {
     });
   }
 
-  extrudeNodesByGroup(nodes) {
+  extrudeAllNodesByGroups(nodes) {
     nodes.forEach(node => {
       this.extrudeNodeAsMushroomWithStem(node, node.group);
     });
   }
 
-  liftEdgesByGroup(edges) {
+  extrudeNodesByGroup(nodes, group, height = 1) {
+    nodes
+      .filter(node => node.group === group)
+      .forEach(node => {
+        this.extrudeNodeAsMushroomWithStem(node, height);
+      });
+  }
+
+  liftAllEdgesByGroups(edges) {
     edges.forEach(edge => {
       this.liftEdgeByGroup(edge);
     });
   }
 
-  resetEdgesLiftByGroup(edges) {
+  liftEdgesByGroup(edges, group, height = 1) {
+    edges
+      .filter(edge => edge.source.group === group && edge.target.group === group)
+      .forEach(edge => {
+        this.liftEdge(edge, height);
+      });
+  }
+
+  resetAllEdgesLiftByGroups(edges) {
     edges.forEach(edge => {
       this.resetEdgeLiftByGroup(edge);
     });
   }
 
-  resetNodesExtrusionByGroup(nodes) {
+  resetEdgesLiftByGroup(edges, group) {
+    edges
+      .filter(edge => edge.source.group === group && edge.target.group === group)
+      .forEach(edge => {
+        this.resetGenericEdgeLift(edge);
+      });
+  }
+
+  resetAllNodesExtrusionByGroups(nodes) {
     nodes.forEach(node => {
       this.resetNodeExtrusion(node, node.group);
     });
+  }
+
+  resetNodesExtrusionByGroup(nodes, group) {
+    nodes
+      .filter(node => node.group === group)
+      .forEach(node => {
+        this.resetGenericNodeExtrusion(node);
+      });
   }
 
   extrudeSelectedNodes() {
