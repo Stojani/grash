@@ -20,6 +20,9 @@ class GraphInteractions {
     this.raycaster = new THREE.Raycaster();
     this.nodeInfoPopUp = null;
     this.flagShowNodePopUp = true;
+    this.lensEnabled = false;
+    this.lensRadius = 5;
+    this.highlightedNodesInLens = [];
     this.initOrbitControls();
     this.addEventListeners();
   }
@@ -52,6 +55,11 @@ class GraphInteractions {
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
     this.raycaster.setFromCamera(mouse, this.camera);
+
+    if (this.lensEnabled) {
+      //this.highlightNodesInLens(mouse);
+      return;
+    }
 
     const nodeIntersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
     if (nodeIntersects.length > 0) {
@@ -1032,6 +1040,168 @@ class GraphInteractions {
 
   disableShowNodePopUp() {
     this.flagShowNodePopUp = false;
+  }
+
+  createLensElement() {
+    if (!document.getElementById('lens')) {
+        const lens = document.createElement('div');
+        lens.id = 'lens';
+        lens.style.position = 'absolute';
+        lens.style.width = '100px';
+        lens.style.height = '100px';
+        lens.style.border = '2px solid #fff';
+        lens.style.borderRadius = '50%';
+        lens.style.pointerEvents = 'none';
+        lens.style.display = 'none';
+        lens.style.zIndex = '1000';
+        document.body.appendChild(lens);
+    }
+  }
+
+  removeLensElement() {
+    const lens = document.getElementById('lens');
+    if (lens) {
+        document.body.removeChild(lens);
+    }
+  }
+
+  enableLensMode(radius = 10) {
+    this.lensEnabled = true;
+    this.lensRadius = radius;
+    const diameter = this.lensRadius * 2;
+    this.createLensElement();
+
+    const lens = document.getElementById('lens');
+    lens.style.display = 'block';
+    lens.style.width = `${diameter}px`;
+    lens.style.height = `${diameter}px`;
+
+    document.addEventListener('mousemove', this.updateLensPosition.bind(this));
+    this.highlightedNodesInLens = [];
+  }
+
+  disableLensMode() {
+    this.lensEnabled = false;
+    const lens = document.getElementById('lens');
+    if (lens) {
+        lens.style.display = 'none';
+    }
+
+    document.removeEventListener('mousemove', this.updateLensPosition.bind(this));
+    this.clearLensHighlights();
+  }
+
+  updateLensPosition(event) {
+    if (this.lensEnabled) {
+        const lens = document.getElementById('lens');
+        if (lens) {
+            const lensRadius = parseFloat(lens.style.width) / 2;
+            console.log("lens.style.width: "+ lens.style.width);
+            console.log("lensRadius: "+ lensRadius);
+            lens.style.left = `${event.clientX - lensRadius}px`;
+            lens.style.top = `${event.clientY - (lensRadius*0.2)}px`;
+            console.log("lens.style.left: "+ lens.style.left);
+            console.log("lens.style.top: "+  lens.style.top);
+
+            // Aggiorna i nodi nella lente
+            this.updateNodesInsideLens(event.clientX, event.clientY, lensRadius);
+        }
+    }
+  }
+
+  updateNodesInsideLens(mouseX, mouseY, lensRadius) {
+    console.log("mouseX: "+ mouseX);
+    console.log("mouseY: "+  mouseY);
+    const rect = this.renderer.domElement.getBoundingClientRect();
+
+    // Confronta la distanza tra il mouse e i nodi proiettati
+    this.nodes.forEach(node => {
+        // Ottieni la posizione del nodo nello spazio dello schermo
+        const nodeScreenPosition = new THREE.Vector3();
+        node.mesh.getWorldPosition(nodeScreenPosition);
+        nodeScreenPosition.project(this.camera);
+
+        // Trasforma le coordinate da normalized device coordinate (NDC) a pixel
+        const nodeScreenX = ((nodeScreenPosition.x + 1) / 2) * rect.width + rect.left;
+        const nodeScreenY = ((-nodeScreenPosition.y + 1) / 2) * rect.height + rect.top;
+
+        // Calcola la distanza tra il nodo e il mouse
+        const distance = Math.sqrt(
+            Math.pow(mouseX - nodeScreenX, 2) +
+            Math.pow(mouseY - nodeScreenY, 2)
+        );
+
+        // Evidenzia o de-evidenzia il nodo in base alla distanza
+        if (distance <= lensRadius) {
+            node.highlight(); // Nodo dentro la lente
+        } else {
+            node.unhighlight(); // Nodo fuori dalla lente
+        }
+    });
+  }
+
+  highlightNodesInLens(mousePosition) {
+    if (!this.lensEnabled) return;
+
+    // Calcola la posizione del mouse nel mondo 3D
+    const mouse3D = new THREE.Vector3();
+    mouse3D.set(mousePosition.x, mousePosition.y, 0.5).unproject(this.camera);
+
+    const nodesInLens = this.nodes.filter(node => {
+        const distance = node.mesh.position.distanceTo(mouse3D);
+        return distance <= this.lensRadius;
+    });
+
+    // Rimuovi l'evidenziazione dai nodi precedenti
+    this.clearLensHighlights();
+
+    // Evidenzia i nuovi nodi
+    nodesInLens.forEach(node => node.hoverHighlight());
+    this.highlightedNodesInLens = nodesInLens;
+
+    // Mostra le informazioni in un popup o pannello
+    this.showLensInfo(nodesInLens);
+  }
+
+  clearLensHighlights() {
+    this.highlightedNodesInLens.forEach(node => node.resetHoverHighlight());
+    this.highlightedNodesInLens = [];
+  }
+
+  drawLensConnections(nodes) {
+    const material = new THREE.LineBasicMaterial({ color: 0xffff00 });
+    const connections = [];
+
+    nodes.forEach((node, index) => {
+        for (let i = index + 1; i < nodes.length; i++) {
+            const geometry = new THREE.BufferGeometry().setFromPoints([
+                node.mesh.position,
+                nodes[i].mesh.position,
+            ]);
+            const line = new THREE.Line(geometry, material);
+            this.scene.add(line);
+            connections.push(line);
+        }
+    });
+
+    this.lensConnections = connections;
+  }
+
+  clearLensConnections() {
+    if (this.lensConnections) {
+        this.lensConnections.forEach(conn => {
+            this.scene.remove(conn);
+            conn.geometry.dispose();
+            conn.material.dispose();
+        });
+        this.lensConnections = [];
+    }
+  }
+
+  showLensInfo(nodes) {
+    // Ad esempio, aggiorna un pannello con le informazioni
+    console.log("Nodes in Lens:", nodes.map(node => node.id));
+    // Puoi creare un popup o aggiornare un'area dell'interfaccia
   }
 
   

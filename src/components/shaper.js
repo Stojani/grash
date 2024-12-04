@@ -792,6 +792,15 @@ class Shaper {
     edge.mesh.material.color.set(edge.originalColor);
   }
 
+  enableLensMode(radius = 10) {
+    this.interactions.enableLensMode(radius); 
+  }
+
+  disableLensMode() {
+    this.interactions.disableLensMode();
+  }
+
+
 }
 
 export default Shaper;
