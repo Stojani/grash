@@ -456,14 +456,28 @@ class Shaper {
   setAllNodesColor(color) {
     if (!this.nodes) return;
     this.nodes.forEach(node => {
-      node.color = color; // Utilizza il setter per aggiornare il colore e il materiale
+      node.color = color;
+    });
+  }
+
+  setAllNodesOriginalColor(color) {
+    if (!this.nodes) return;
+    this.nodes.forEach(node => {
+      node.setOriginalcolor(color);
     });
   }
 
   setAllEdgesColor(color) {
     if (!this.edges) return;
     this.edges.forEach(edge => {
-      edge.color = color; // Utilizza il setter per aggiornare il colore e il materiale
+      edge.color = color;
+    });
+  }
+
+  setAllEdgesOriginalColor(color) {
+    if (!this.edges) return;
+    this.edges.forEach(edge => {
+      edge.setOriginalColor(color);
     });
   }
 

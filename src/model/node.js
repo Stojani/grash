@@ -33,15 +33,6 @@ class Node {
     }
   }
 
-  get color() {
-    return this._color;
-  }
-
-  set color(newColor) {
-    this._color = newColor;
-    this.material.color.set(newColor);
-  }
-
   get geometry() {
     return this._geometry;
   }
@@ -51,24 +42,49 @@ class Node {
     this.mesh.geometry = newGeometry;
   }
 
-  highlight() {
-    this.mesh.material.color.set('#ff0000'); // Red
+  get color() {
+    return this._color;
   }
 
-  unhighlight() {
-    this.mesh.material.color.set(this.originalColor); // Reset to default color
+  set color(newColor) {
+    this._color = newColor;
+    this.material.color.set(newColor);
   }
 
-  resetColor() {
+  resetColor(color=null) {
+    if(color===null) {
+      color = this.originalColor;
+    }
+    this.material.color.set(color);
+  }
+
+  setOriginalcolor(newColor) {
+    this._color = newColor;
+    this.originalColor = newColor;
+    this.material.color.set(newColor);
+  }
+
+  resetOriginalColor() {
     this.material.color.set(this.originalColor);
   }
 
-  hoverHighlight() {
-    this.mesh.material.emissive.setHex(0xffff00); // Yellow emissive color for hover
+  highlight(color='#ff0000') { // Red
+    this.mesh.material.color.set(color); 
   }
 
-  resetHoverHighlight() {
-    this.mesh.material.emissive.setHex(0x000000); // Reset emissive color
+  unhighlight(color=null) {
+    if(color===null) {
+      color = this.originalColor;
+    }
+    this.mesh.material.color.set(color);
+  }
+
+  hoverHighlight(hexColor=0xffff00) { // Yellow
+    this.mesh.material.emissive.setHex(hexColor);
+  }
+
+  resetHoverHighlight(hexColor=0x000000) { 
+    this.mesh.material.emissive.setHex(hexColor);
   }
 
   removeFromScene(scene) {

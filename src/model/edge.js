@@ -9,7 +9,6 @@ class Edge {
     this.weight= weight;
     this.extrusionBox = null;
 
-    // Crea un nuovo materiale per ogni arco
     this.material = new THREE.MeshStandardMaterial({
       color: Edge.DEFAULT_COLOR, 
       transparent: true, 
@@ -18,7 +17,9 @@ class Edge {
       roughness: 0.5 
     });
 
-    this.originalColor = this.material.color.getStyle(); // Salva il colore originale
+    this.originalColor = this.material.color.getStyle();
+    this.defaultColor = this.originalColor;
+    this.originalOpacity = this.material.opacity;
     this.updateGeometry();
   }
 
@@ -27,10 +28,8 @@ class Edge {
     const end = new THREE.Vector3(this.target.mesh.position.x, this.target.mesh.position.y, this.target.mesh.position.z);
     const distance = start.distanceTo(end);
 
-    // Cylinder geometry: small radius, height as distance between nodes
     const edgeGeometry = new THREE.CylinderGeometry(0.02, 0.02, distance, 10);
 
-    // Rimuovi la vecchia geometria
     if (this.mesh) {
       this.mesh.geometry.dispose();
       this.mesh.material.dispose();
@@ -41,22 +40,18 @@ class Edge {
 
     this.mesh = new THREE.Mesh(edgeGeometry, this.material);
 
-    // Posiziona il cilindro a metà tra start e end
     const midPoint = start.clone().add(end).multiplyScalar(0.5);
     this.mesh.position.copy(midPoint);
 
-    // Allinea il cilindro con la linea tra start e end
     const orientation = new THREE.Matrix4();
     orientation.lookAt(start, end, new THREE.Vector3(0, 1, 0));
     this.mesh.quaternion.setFromRotationMatrix(orientation);
 
-    // Ruota il cilindro di 90 gradi sull'asse Y
     this.mesh.rotateX(Math.PI / 2);
 
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
 
-    // Assicurati che l'arco sia visibile aggiungendolo alla scena
     if (this.source.mesh.parent) {
       this.source.mesh.parent.add(this.mesh);
     }
@@ -66,15 +61,43 @@ class Edge {
     this.mesh.material.color.set(newColor);
   }
 
-  resetColor() {
+  resetColor(color=null) {
+    if(color===null) {
+      color = this.originalColor;
+    }
+    this.mesh.material.color.set(color);
+    //this.mesh.material.opacity = this.originalOpacity;
+  }
+
+  setOriginalColor(newColor) {
+    this.originalColor = newColor;
+    this.defaultColor = this.originalColor;
+    this.mesh.material.color.set(newColor);
+  }
+
+  resetOriginalColor() {
     this.mesh.material.color.set(this.originalColor);
+  }
+
+  highlight(color = '#FFD700') { // Yellow
+    this.defaultColor = this.mesh.material.color.getHex();
+    this.mesh.material.color.set(color);
+    this.mesh.material.opacity = Math.min(this.originalOpacity + 0.3, 1);
+  }
+
+  unhighlight(color = null) {
+    if (color === null) {
+      color = this.originalColor;
+    }
+    this.mesh.material.color.set(color);
+    this.mesh.material.opacity = this.originalOpacity;
   }
 
   removeFromScene(scene) {
     if (this.mesh && this.mesh.parent) {
       scene.remove(this.mesh);
-      this.mesh.geometry.dispose(); // Rilascia la geometria dell'arco
-      this.mesh.material.dispose(); // Rilascia il materiale dell'arco
+      this.mesh.geometry.dispose();
+      this.mesh.material.dispose();
     }
   }
 }

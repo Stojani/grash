@@ -189,8 +189,7 @@ class GraphInteractions {
   highlightEdge(edge) {
     if (edge && edge.mesh && edge.mesh.material) {
       if (!this.selectedEdges.includes(edge)) {
-        edge.originalColor = edge.mesh.material.color.getHex();
-        edge.mesh.material.color.set('#FFD700');
+        edge.highlight('#FFD700');
       }
     }
   }
@@ -198,16 +197,16 @@ class GraphInteractions {
   unhighlightEdge(edge) {
     if (edge && edge.mesh && edge.mesh.material && edge.originalColor !== undefined) {
       if (!this.selectedEdges.includes(edge)) {
-        edge.mesh.material.color.set(edge.originalColor);
+        edge.unhighlight(edge.defaultColor);
       }
     }
   }
 
   unhighlightAllEdges() {
     this.edges.forEach(edge => {
-        if (edge && edge.mesh && edge.mesh.material) {
-            edge.mesh.material.color.set(edge.originalColor);
-        }
+      if (edge && edge.mesh && edge.mesh.material) {
+        edge.unhighlight(edge.defaultColor);
+      }
     });
   }
 
@@ -1042,19 +1041,49 @@ class GraphInteractions {
     this.flagShowNodePopUp = false;
   }
 
-  createLensElement() {
+  setAllNodesColor(color) {
+    if (!this.nodes) return;
+    this.nodes.forEach(node => {
+      node.color = color;
+    });
+  }
+
+  resetAllNodesColor(color=null) {
+    if (!this.nodes) return;
+    this.nodes.forEach(node => {
+      node.resetColor(color);
+    });
+  }
+
+  setAllEdgesColor(color) {
+    if (!this.edges) return;
+    this.edges.forEach(edge => {
+      edge.color = color;
+    });
+  }
+
+  resetAllEdgesColor(color=null) {
+    if (!this.edges) return;
+    this.edges.forEach(edge => {
+      edge.resetColor(color);
+    });
+  }
+
+  createLensElement(radius=10) {
     if (!document.getElementById('lens')) {
-        const lens = document.createElement('div');
-        lens.id = 'lens';
-        lens.style.position = 'absolute';
-        lens.style.width = '100px';
-        lens.style.height = '100px';
-        lens.style.border = '2px solid #fff';
-        lens.style.borderRadius = '50%';
-        lens.style.pointerEvents = 'none';
-        lens.style.display = 'none';
-        lens.style.zIndex = '1000';
-        document.body.appendChild(lens);
+      const lens = document.createElement('div');
+      lens.id = 'lens';
+      lens.style.position = 'absolute';
+      lens.style.width = `${radius * 2}px`;
+      lens.style.height = `${radius * 2}px`;
+      lens.style.border = '2px solid #fff';
+      lens.style.borderRadius = '50%';
+      lens.style.pointerEvents = 'none';
+      lens.style.display = 'none';
+      lens.style.zIndex = '1000';
+      lens.style.transform = `translate(-${radius}px, -${radius}px)`;
+
+      document.body.appendChild(lens);
     }
   }
 
@@ -1068,75 +1097,96 @@ class GraphInteractions {
   enableLensMode(radius = 10) {
     this.lensEnabled = true;
     this.lensRadius = radius;
-    const diameter = this.lensRadius * 2;
-    this.createLensElement();
+    this.setAllNodesColor('white');
+    this.setAllEdgesColor('white');
+    this.createLensElement(radius);
 
     const lens = document.getElementById('lens');
     lens.style.display = 'block';
-    lens.style.width = `${diameter}px`;
-    lens.style.height = `${diameter}px`;
-
-    document.addEventListener('mousemove', this.updateLensPosition.bind(this));
     this.highlightedNodesInLens = [];
+    document.addEventListener('mousemove', this.updateLensPosition.bind(this));
   }
 
   disableLensMode() {
     this.lensEnabled = false;
+    this.resetAllNodesColor();
+    this.resetAllEdgesColor();
     const lens = document.getElementById('lens');
     if (lens) {
-        lens.style.display = 'none';
+      lens.style.display = 'none';
     }
-
+    this.highlightedNodesInLens = [];
     document.removeEventListener('mousemove', this.updateLensPosition.bind(this));
-    this.clearLensHighlights();
+    //this.clearLensHighlights();
   }
 
   updateLensPosition(event) {
     if (this.lensEnabled) {
-        const lens = document.getElementById('lens');
-        if (lens) {
-            const lensRadius = parseFloat(lens.style.width) / 2;
-            console.log("lens.style.width: "+ lens.style.width);
-            console.log("lensRadius: "+ lensRadius);
-            lens.style.left = `${event.clientX - lensRadius}px`;
-            lens.style.top = `${event.clientY - (lensRadius*0.2)}px`;
-            console.log("lens.style.left: "+ lens.style.left);
-            console.log("lens.style.top: "+  lens.style.top);
+      const lens = document.getElementById('lens');
+      if (lens) {
+        const offset = 80;
+        const lensRadius = parseFloat(lens.style.width) / 2;
+        //console.log("lens.style.width: "+ lens.style.width);
+        //console.log("lensRadius: "+ lensRadius);
+        lens.style.left = `${event.clientX}px`;
+        lens.style.top = `${event.clientY + offset}px`;
+        //console.log("lens.style.left: "+ lens.style.left);
+        //console.log("lens.style.top: "+  lens.style.top);
+        //console.log("mouseX: "+ event.clientX);
+        //console.log("mouseY: "+  event.clientY);
 
-            // Aggiorna i nodi nella lente
-            this.updateNodesInsideLens(event.clientX, event.clientY, lensRadius);
-        }
+        // Aggiorna nodi e archi nella lente
+        this.updateNodesInsideLens(event.clientX, event.clientY, lensRadius);
+        this.updateEdgesInsideLens();
+      }
     }
   }
 
   updateNodesInsideLens(mouseX, mouseY, lensRadius) {
-    console.log("mouseX: "+ mouseX);
-    console.log("mouseY: "+  mouseY);
     const rect = this.renderer.domElement.getBoundingClientRect();
 
     // Confronta la distanza tra il mouse e i nodi proiettati
+    this.highlightedNodesInLens = [];
     this.nodes.forEach(node => {
-        // Ottieni la posizione del nodo nello spazio dello schermo
-        const nodeScreenPosition = new THREE.Vector3();
-        node.mesh.getWorldPosition(nodeScreenPosition);
-        nodeScreenPosition.project(this.camera);
+      // Ottieni la posizione del nodo nello spazio dello schermo
+      const nodeScreenPosition = new THREE.Vector3();
+      node.mesh.getWorldPosition(nodeScreenPosition);
+      nodeScreenPosition.project(this.camera);
 
-        // Trasforma le coordinate da normalized device coordinate (NDC) a pixel
-        const nodeScreenX = ((nodeScreenPosition.x + 1) / 2) * rect.width + rect.left;
-        const nodeScreenY = ((-nodeScreenPosition.y + 1) / 2) * rect.height + rect.top;
+      // Trasforma le coordinate da normalized device coordinate (NDC) a pixel
+      const nodeScreenX = ((nodeScreenPosition.x + 1) / 2) * rect.width + rect.left;
+      const nodeScreenY = ((-nodeScreenPosition.y + 1) / 2) * rect.height + rect.top;
 
-        // Calcola la distanza tra il nodo e il mouse
-        const distance = Math.sqrt(
-            Math.pow(mouseX - nodeScreenX, 2) +
-            Math.pow(mouseY - nodeScreenY, 2)
-        );
+      // Calcola la distanza tra il nodo e il mouse
+      const distance = Math.sqrt(
+          Math.pow(mouseX - nodeScreenX, 2) +
+          Math.pow(mouseY - nodeScreenY, 2)
+      );
 
-        // Evidenzia o de-evidenzia il nodo in base alla distanza
-        if (distance <= lensRadius) {
-            node.highlight(); // Nodo dentro la lente
-        } else {
-            node.unhighlight(); // Nodo fuori dalla lente
-        }
+      // Evidenzia o de-evidenzia il nodo in base alla distanza
+      if (distance <= lensRadius) {
+          node.highlight(); // Nodo dentro la lente
+          this.highlightedNodesInLens.push(node);
+      } else {
+          node.unhighlight('white'); // Nodo fuori dalla lente
+      }
+    });
+  }
+
+  updateEdgesInsideLens() {
+    // Ottieni l'elenco degli ID dei nodi evidenziati nella lente
+    const highlightedNodeIds = this.highlightedNodesInLens.map(node => node.id);
+
+    // Verifica gli archi per vedere se i loro nodi `source` e `target` sono nella lente
+    this.edges.forEach(edge => {
+      const isSourceHighlighted = highlightedNodeIds.includes(edge.source.id);
+      const isTargetHighlighted = highlightedNodeIds.includes(edge.target.id);
+
+      if (isSourceHighlighted && isTargetHighlighted) {
+        edge.highlight('red');
+      } else {
+        edge.unhighlight('white');
+      }
     });
   }
 
