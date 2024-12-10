@@ -457,52 +457,107 @@ class GraphInteractions {
     popup.style.display = 'block';
   
     // Titolo del pop-up
-    const title = document.createElement('h3');
-    title.textContent = `Node ID: ${node.id}`;
+    const title = document.createElement('h5');
+    title.textContent = `Node: ${node.id}`;
     title.style.marginBottom = '8px';
     popup.appendChild(title);
   
-    // Campi dinamici per gli attributi del nodo
-    Object.keys(node).forEach(key => {
-      if (key !== 'mesh' && key !== 'material' && key !== 'extrusionStem') { // Escludiamo proprietà non rilevanti
-        const fieldContainer = document.createElement('div');
-        fieldContainer.style.marginBottom = '6px';
+    // Campi del nodo da visualizzare
+    const fields = [
+      { key: 'id', label: 'ID', editable: false },
+      { key: 'name', label: 'Name', editable: true },
+      { key: 'group', label: 'Group', editable: true },
+      { key: 'x', label: 'X', editable: false },
+      { key: 'y', label: 'Y', editable: false },
+      { key: 'z', label: 'Z', editable: false },
+      { key: 'color', label: 'Color', editable: true }
+    ];
   
-        const label = document.createElement('label');
-        label.textContent = key;
-        label.style.marginRight = '8px';
+    fields.forEach(field => {
+      const fieldContainer = document.createElement('div');
+      fieldContainer.style.marginBottom = '6px';
   
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = node[key];
-        input.style.width = '100%';
+      const label = document.createElement('label');
+      label.textContent = field.label;
+      label.style.marginRight = '8px';
+  
+      const input = document.createElement('input');
+      input.type = field.key === 'color' ? 'color' : 'text';
+      input.value = node[field.key];
+      input.style.width = field.key === 'color' ? '50px' : '100px';
+  
+      if (!field.editable) {
+        input.disabled = true;
+      } else {
         input.oninput = () => {
-          node[key] = input.value; // Aggiorna l'attributo del nodo
+          node[field.key] =
+            field.key === 'group' || field.key === 'name'
+              ? input.value
+              : parseFloat(input.value) || input.value;
+          if (field.key === 'color') {
+            node.color = input.value;
+          }
         };
-  
-        fieldContainer.appendChild(label);
-        fieldContainer.appendChild(input);
-        popup.appendChild(fieldContainer);
       }
+  
+      fieldContainer.appendChild(label);
+      fieldContainer.appendChild(input);
+      popup.appendChild(fieldContainer);
     });
   
-    // Posiziona il pop-up accanto al nodo
+    // Posiziona il popup accanto al punto sopra il nodo
     const rect = this.renderer.domElement.getBoundingClientRect();
-    const screenPosition = new THREE.Vector3();
-    node.mesh.getWorldPosition(screenPosition);
-    screenPosition.project(this.camera);
+    const nodePosition = new THREE.Vector3();
+    node.mesh.getWorldPosition(nodePosition);
   
-    const popupX = ((screenPosition.x + 1) / 2) * rect.width + rect.left;
-    const popupY = ((-screenPosition.y + 1) / 2) * rect.height + rect.top;
+    // Calcola la posizione del punto sopra il nodo
+    const popupHeight = 30; // Altezza sopra il nodo sull'asse Z
+    const popupPosition = nodePosition.clone();
+    popupPosition.z += popupHeight;
+  
+    // Proietta il punto sopra il nodo nello spazio dello schermo
+    popupPosition.project(this.camera);
+    const popupX = ((popupPosition.x + 1) / 2) * rect.width + rect.left;
+    const popupY = ((-popupPosition.y + 1) / 2) * rect.height + rect.top;
   
     popup.style.left = `${popupX}px`;
     popup.style.top = `${popupY}px`;
+  
+    // Aggiungi una linea di connessione tra il nodo e il popup
+    this.addConnectionLine(nodePosition, popupHeight);
   }
-
+  
+  addConnectionLine(nodePosition, popupHeight) {
+    // Rimuove eventuali linee di connessione esistenti
+    if (this.popupConnectionLine) {
+      this.scene.remove(this.popupConnectionLine);
+      this.popupConnectionLine.geometry.dispose();
+      this.popupConnectionLine.material.dispose();
+    }
+  
+    // Crea una linea di connessione
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(nodePosition.x, nodePosition.y, nodePosition.z),
+      new THREE.Vector3(nodePosition.x, nodePosition.y, nodePosition.z + popupHeight)
+    ]);
+  
+    this.popupConnectionLine = new THREE.Line(lineGeometry, lineMaterial);
+    this.scene.add(this.popupConnectionLine);
+  }
+  
   hidePopup() {
     const popup = document.getElementById('node-popup');
     if (popup) {
       popup.style.display = 'none';
+    }
+  
+    // Rimuovi la linea di connessione se esiste
+    if (this.popupConnectionLine) {
+      this.scene.remove(this.popupConnectionLine);
+      this.popupConnectionLine.geometry.dispose();
+      this.popupConnectionLine.material.dispose();
+      this.popupConnectionLine = null;
     }
   }
 

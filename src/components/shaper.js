@@ -547,7 +547,7 @@ class Shaper {
       }
     }
   
-    const newNode = new Node(newId.toString(), 0, x, y, z);
+    const newNode = new Node(newId.toString(), newId.toString(), 0, x, y, z);
     this.nodes.push(newNode);
     this.scene.add(newNode.mesh);
   

@@ -4,7 +4,7 @@ import Edge from '../model/Edge';
 class Drawer {
   static fromJSON(jsonData) {
     const nodes = jsonData.nodes.map(nodeData => {
-      const node = new Node(nodeData.id, nodeData.group, nodeData.x, nodeData.y, nodeData.z, nodeData.color, nodeData.geometry);
+      const node = new Node(nodeData.id, nodeData.id, nodeData.group, nodeData.x, nodeData.y, nodeData.z, nodeData.color, nodeData.geometry);
       if (!node.mesh) {
         console.error(`Node with ID ${nodeData.id} has no mesh.`);
       }
