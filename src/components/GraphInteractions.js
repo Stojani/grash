@@ -136,12 +136,12 @@ class GraphInteractions {
           selectedNode.highlight();
           this.selectedNodes.push(selectedNode);
           if (this.flagShowNodePopUp) {
-            this.showPopup(selectedNode);
+            this.showTestPopup(selectedNode);
           }
       } else {
           selectedNode.resetColor();
           this.selectedNodes.splice(index, 1);
-          this.hidePopup();
+          this.hideTestPopup();
       }
       this.notifySelectionChange();
     }
@@ -347,7 +347,7 @@ class GraphInteractions {
 
 
   // ------------------- POPUP INFO --------------------- VERSION 1.0
-  createPopup(node) {
+  createOldPopup(node) {
     const spriteMaterial = new THREE.SpriteMaterial({ 
       map: this.createTextTexture(`id: ${node.id}\nGroup: ${node.group}\nx: ${node.x}\ny: ${node.y}\nz: ${node.z}`),
       transparent: true
@@ -558,6 +558,100 @@ class GraphInteractions {
       this.popupConnectionLine.geometry.dispose();
       this.popupConnectionLine.material.dispose();
       this.popupConnectionLine = null;
+    }
+  }
+
+  // 3.0
+  createInfoPopup(node) {
+    // Rimuovi eventuali popup o linee di connessione precedenti
+    if (this.nodeInfoPopUp) {
+      this.scene.remove(this.nodeInfoPopUp);
+    }
+    if (this.nodeToPopupLine) {
+      this.scene.remove(this.nodeToPopupLine);
+    }
+  
+    // Dimensioni del canvas e fattore di scala per migliorare la qualità
+    const canvasWidth = 300; // Larghezza visibile del popup
+    const canvasHeight = 80; // Altezza visibile del popup
+    const scaleFactor = 5; // Fattore di scala per migliorare la risoluzione
+  
+    // Crea un canvas ad alta risoluzione
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasWidth * scaleFactor;
+    canvas.height = canvasHeight * scaleFactor;
+  
+    const context = canvas.getContext('2d');
+    context.scale(scaleFactor, scaleFactor);
+  
+    // Disegna il contorno nero e lo sfondo bianco
+    context.fillStyle = 'black'; // Contorno nero
+    context.fillRect(0, 0, canvasWidth, canvasHeight);
+    context.fillStyle = 'rgba(255, 255, 255, 0.9)'; // Sfondo bianco semitrasparente
+    context.fillRect(3, 3, canvasWidth - 6, canvasHeight - 6); // Margini interni
+  
+    // Disegna i titoli e i valori
+    context.fillStyle = 'black';
+    context.font = 'bold 16px Arial';
+    const fields = [
+      { label: 'ID', value: node.id },
+      { label: 'Name', value: node.name || 'N/A' },
+      { label: 'Group', value: node.group || 'N/A' }
+    ];
+  
+    let yPosition = 20; // Posizione verticale iniziale
+    fields.forEach(field => {
+      context.fillText(`${field.label}:`, 10, yPosition);
+      context.fillText(`${field.value}`, 100, yPosition);
+      yPosition += 20; // Incrementa la posizione per il campo successivo
+    });
+  
+    // Crea la texture dal canvas
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter; // Per evitare aliasing
+    texture.needsUpdate = true;
+  
+    // Crea il materiale dello sprite
+    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(spriteMaterial);
+  
+    // Posiziona il popup sopra il nodo
+    sprite.position.copy(node.mesh.position);
+    sprite.position.z += 20; // Altezza della linea di connessione
+  
+    // Aggiungi il popup alla scena
+    this.nodeInfoPopUp = sprite;
+    this.scene.add(sprite);
+  
+    // Crea la linea di connessione tra il nodo e il popup
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    const points = [
+      new THREE.Vector3(node.mesh.position.x, node.mesh.position.y, node.mesh.position.z),
+      new THREE.Vector3(sprite.position.x, sprite.position.y, sprite.position.z)
+    ];
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+    const line = new THREE.Line(lineGeometry, lineMaterial);
+  
+    // Aggiungi la linea alla scena
+    this.nodeToPopupLine = line;
+    this.scene.add(line);
+  }
+
+  showTestPopup(node) {
+    if (this.nodeInfoPopUp) {
+      this.scene.remove(this.nodeInfoPopUp);
+    }
+    this.createInfoPopup(node);
+  }
+
+  hideTestPopup() {
+    if (this.nodeInfoPopUp) {
+        this.scene.remove(this.nodeInfoPopUp);
+        this.nodeInfoPopUp = null;
+    }
+    if (this.nodeToPopupLine) {
+      this.scene.remove(this.nodeToPopupLine);
+      this.nodeToPopupLine = null;
     }
   }
 
