@@ -345,10 +345,12 @@ class GraphInteractions {
     this.selectedNodes = [];
   }
 
+
+  // ------------------- POPUP INFO --------------------- VERSION 1.0
   createPopup(node) {
     const spriteMaterial = new THREE.SpriteMaterial({ 
-        map: this.createTextTexture(`ID: ${node.id}\nX: ${node.x}\nY: ${node.y}\nZ: ${node.z}`),
-        transparent: true
+      map: this.createTextTexture(`id: ${node.id}\nGroup: ${node.group}\nx: ${node.x}\ny: ${node.y}\nz: ${node.z}`),
+      transparent: true
     });
 
     const sprite = new THREE.Sprite(spriteMaterial);   
@@ -405,17 +407,102 @@ class GraphInteractions {
     return texture;
   }
 
-  showPopup(node) {
+  showOldPopup(node) {
     if (this.nodeInfoPopUp) {
-        this.scene.remove(this.nodeInfoPopUp);
+      this.scene.remove(this.nodeInfoPopUp);
     }
     this.createPopup(node);
   }
 
-  hidePopup() {
+  hideOldPopup() {
     if (this.nodeInfoPopUp) {
         this.scene.remove(this.nodeInfoPopUp);
         this.nodeInfoPopUp = null;
+    }
+  }
+
+  // ------------------- POPUP INFO --------------------- VERSION 2.0
+  createPopupElement() {
+    if (!document.getElementById('node-popup')) {
+      const popup = document.createElement('div');
+      popup.id = 'node-popup';
+      popup.style.position = 'absolute';
+      popup.style.padding = '10px';
+      popup.style.background = 'rgba(255, 255, 255, 0.9)';
+      popup.style.border = '1px solid #ccc';
+      popup.style.borderRadius = '8px';
+      popup.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+      popup.style.display = 'none';
+      popup.style.zIndex = '1000';
+      document.body.appendChild(popup);
+    }
+  }
+  
+  removePopupElement() {
+    const popup = document.getElementById('node-popup');
+    if (popup) {
+      document.body.removeChild(popup);
+    }
+  }
+
+  showPopup(node) {
+    let popup = document.getElementById('node-popup');
+    if (!popup) {
+      this.createPopupElement();
+      popup = document.getElementById('node-popup');
+      if (!popup) return;
+    }
+  
+    popup.innerHTML = ''; // Svuota il contenuto precedente
+    popup.style.display = 'block';
+  
+    // Titolo del pop-up
+    const title = document.createElement('h3');
+    title.textContent = `Node ID: ${node.id}`;
+    title.style.marginBottom = '8px';
+    popup.appendChild(title);
+  
+    // Campi dinamici per gli attributi del nodo
+    Object.keys(node).forEach(key => {
+      if (key !== 'mesh' && key !== 'material' && key !== 'extrusionStem') { // Escludiamo proprietà non rilevanti
+        const fieldContainer = document.createElement('div');
+        fieldContainer.style.marginBottom = '6px';
+  
+        const label = document.createElement('label');
+        label.textContent = key;
+        label.style.marginRight = '8px';
+  
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = node[key];
+        input.style.width = '100%';
+        input.oninput = () => {
+          node[key] = input.value; // Aggiorna l'attributo del nodo
+        };
+  
+        fieldContainer.appendChild(label);
+        fieldContainer.appendChild(input);
+        popup.appendChild(fieldContainer);
+      }
+    });
+  
+    // Posiziona il pop-up accanto al nodo
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const screenPosition = new THREE.Vector3();
+    node.mesh.getWorldPosition(screenPosition);
+    screenPosition.project(this.camera);
+  
+    const popupX = ((screenPosition.x + 1) / 2) * rect.width + rect.left;
+    const popupY = ((-screenPosition.y + 1) / 2) * rect.height + rect.top;
+  
+    popup.style.left = `${popupX}px`;
+    popup.style.top = `${popupY}px`;
+  }
+
+  hidePopup() {
+    const popup = document.getElementById('node-popup');
+    if (popup) {
+      popup.style.display = 'none';
     }
   }
 
@@ -1145,44 +1232,37 @@ class GraphInteractions {
   updateNodesInsideLens(mouseX, mouseY, lensRadius) {
     const rect = this.renderer.domElement.getBoundingClientRect();
 
-    // Confronta la distanza tra il mouse e i nodi proiettati
     this.highlightedNodesInLens = [];
     this.nodes.forEach(node => {
-      // Ottieni la posizione del nodo nello spazio dello schermo
       const nodeScreenPosition = new THREE.Vector3();
       node.mesh.getWorldPosition(nodeScreenPosition);
       nodeScreenPosition.project(this.camera);
 
-      // Trasforma le coordinate da normalized device coordinate (NDC) a pixel
       const nodeScreenX = ((nodeScreenPosition.x + 1) / 2) * rect.width + rect.left;
       const nodeScreenY = ((-nodeScreenPosition.y + 1) / 2) * rect.height + rect.top;
 
-      // Calcola la distanza tra il nodo e il mouse
       const distance = Math.sqrt(
           Math.pow(mouseX - nodeScreenX, 2) +
           Math.pow(mouseY - nodeScreenY, 2)
       );
 
-      // Evidenzia o de-evidenzia il nodo in base alla distanza
       if (distance <= lensRadius) {
-          node.highlight(); // Nodo dentro la lente
+          node.highlight();
           this.highlightedNodesInLens.push(node);
       } else {
-          node.unhighlight('white'); // Nodo fuori dalla lente
+          node.unhighlight('white');
       }
     });
   }
 
   updateEdgesInsideLens() {
-    // Ottieni l'elenco degli ID dei nodi evidenziati nella lente
     const highlightedNodeIds = this.highlightedNodesInLens.map(node => node.id);
 
-    // Verifica gli archi per vedere se i loro nodi `source` e `target` sono nella lente
     this.edges.forEach(edge => {
       const isSourceHighlighted = highlightedNodeIds.includes(edge.source.id);
       const isTargetHighlighted = highlightedNodeIds.includes(edge.target.id);
 
-      if (isSourceHighlighted && isTargetHighlighted) {
+      if (isSourceHighlighted && isTargetHighlighted) { // case 2: use OR condition
         edge.highlight('red');
       } else {
         edge.unhighlight('white');
@@ -1193,7 +1273,6 @@ class GraphInteractions {
   highlightNodesInLens(mousePosition) {
     if (!this.lensEnabled) return;
 
-    // Calcola la posizione del mouse nel mondo 3D
     const mouse3D = new THREE.Vector3();
     mouse3D.set(mousePosition.x, mousePosition.y, 0.5).unproject(this.camera);
 
@@ -1202,14 +1281,11 @@ class GraphInteractions {
         return distance <= this.lensRadius;
     });
 
-    // Rimuovi l'evidenziazione dai nodi precedenti
     this.clearLensHighlights();
 
-    // Evidenzia i nuovi nodi
     nodesInLens.forEach(node => node.hoverHighlight());
     this.highlightedNodesInLens = nodesInLens;
 
-    // Mostra le informazioni in un popup o pannello
     this.showLensInfo(nodesInLens);
   }
 
