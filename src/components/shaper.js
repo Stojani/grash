@@ -272,13 +272,18 @@ class Shaper {
         this.popup.position.y += 1.5; // Mantieni l'offset sopra
     }
     */
-}
+  }
 
   animate() {
     this.animationFrameId = requestAnimationFrame(() => this.animate());
+  
     if (this.interactions) {
       this.interactions.update();
+      if (this.interactions.currentPopup) {
+        this.interactions.updateConnectionLine();
+      }
     }
+  
     if (this.renderer && this.scene && this.camera) {
       this.renderer.render(this.scene, this.camera);
     }
