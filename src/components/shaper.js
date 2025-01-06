@@ -504,6 +504,11 @@ class Shaper {
       window.removeEventListener('resize', this.interactions.onWindowResize);
     }
 
+    // Rimuovi popUp esistenti
+    if (this.interactions.selectedNodes) {
+      this.interactions.removeExistingPopUpInfo();
+    }
+
     // Rimuovi il renderer dal DOM
     this.container.removeChild(this.renderer.domElement);
 

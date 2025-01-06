@@ -1,6 +1,5 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three';
-import { Subject } from 'rxjs';
 
 class GraphInteractions {
   constructor(camera, renderer, scene, nodes, edges) {
@@ -14,7 +13,6 @@ class GraphInteractions {
     this.selectedNode = null;
     this.selectedEdges = [];
     this.selectedEdge = null;
-    this.selectionChange$ = new Subject();
     this.hoveredNode = null;
     this.hoveredEdge = null;
     this.raycaster = new THREE.Raycaster();
@@ -145,13 +143,7 @@ class GraphInteractions {
           this.selectedNodes.splice(index, 1);
           this.hideFixedPopup(selectedNode);
       }
-      this.notifySelectionChange();
     }
-  }
-
-  notifySelectionChange() {
-    console.log("qua ci entra");
-    this.selectionChange$.next(this.selectedNodes);
   }
 
   //ARCHI
@@ -345,6 +337,12 @@ class GraphInteractions {
       this.removeNode(node.mesh);
     });
     this.selectedNodes = [];
+  }
+
+  removeExistingPopUpInfo() {
+    this.selectedNodes.forEach(node => {
+      this.hideFixedPopup(node);
+    });
   }
 
 
