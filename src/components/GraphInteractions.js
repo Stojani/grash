@@ -21,6 +21,7 @@ class GraphInteractions {
     this.lensEnabled = false;
     this.lensRadius = 5;
     this.highlightedNodesInLens = [];
+    this.activePopups = new Map();
     this.initOrbitControls();
     this.addEventListeners();
   }
@@ -759,10 +760,12 @@ class GraphInteractions {
     }
 
     // Salva il riferimento per aggiornare la posizione
-    this.currentPopup = { popup, line, node };
+    //this.currentPopup = { popup, line, node };
+    this.activePopups.set(node.id, { popup, line, node });
 
     // Aggiorna la posizione iniziale della linea
-    this.updateConnectionLine();
+    //this.updateConnectionLine();
+    this.updatePopupAndLine(node.id);
   }
 
   updateConnectionLine() {
@@ -802,7 +805,60 @@ class GraphInteractions {
     line.style.transform = `rotate(${angle}deg)`;
   }
 
+  updatePopupAndLine(nodeId) {
+    const entry = this.activePopups.get(nodeId);
+    if (!entry) return;
+  
+    const { popup, line, node } = entry;
+  
+    // Ottieni il bounding rect del canvas di Three.js
+    const rect = this.renderer.domElement.getBoundingClientRect();
+  
+    // Ottieni la posizione 3D del nodo e proietta nello spazio dello schermo
+    const nodePosition = new THREE.Vector3();
+    node.mesh.getWorldPosition(nodePosition);
+  
+    // Calcola la posizione proiettata in 2D del nodo
+    const projectedNode = nodePosition.clone();
+    projectedNode.project(this.camera);
+  
+    const nodeScreenX = ((projectedNode.x + 1) / 2) * rect.width + rect.left;
+    const nodeScreenY = ((-projectedNode.y + 1) / 2) * rect.height + rect.top;
+  
+    // Ottieni la posizione del popup
+    const popupRect = popup.getBoundingClientRect();
+    const popupX = popupRect.left;
+    const popupY = popupRect.top + popupRect.height / 2;
+  
+    // Calcola la distanza e l'angolo tra i due punti
+    const deltaX = popupX - nodeScreenX;
+    const deltaY = popupY - nodeScreenY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+  
+    // Posiziona la linea nel DOM
+    line.style.left = `${nodeScreenX}px`;
+    line.style.top = `${nodeScreenY}px`;
+    line.style.width = `${distance}px`;
+    line.style.transform = `rotate(${angle}deg)`;
+  }
+
   hideFixedPopup(node) {
+    const entry = this.activePopups.get(node.id);
+    if (!entry) return;
+  
+    const { popup, line } = entry;
+  
+    // Rimuovi popup e linea dal DOM
+    document.body.removeChild(popup);
+    document.body.removeChild(line);
+  
+    // Rimuovi dalla mappa
+    this.activePopups.delete(node.id);
+  }
+  
+
+  oldHideFixedPopup(node) {
     const popup = document.getElementById(`node-popup-${node.id}`);
     const line = document.getElementById(`line-to-popup-${node.id}`);
 

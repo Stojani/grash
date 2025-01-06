@@ -279,9 +279,13 @@ class Shaper {
   
     if (this.interactions) {
       this.interactions.update();
-      if (this.interactions.currentPopup) {
+      /*if (this.interactions.currentPopup) {
         this.interactions.updateConnectionLine();
-      }
+      }*/
+      // Aggiorna tutti i popup e le linee di connessione
+      this.interactions.activePopups.forEach((_, nodeId) => {
+        this.interactions.updatePopupAndLine(nodeId);
+      });
     }
   
     if (this.renderer && this.scene && this.camera) {
