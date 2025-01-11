@@ -423,248 +423,7 @@ class GraphInteractions {
     }
   }
 
-  // ------------------- POPUP INFO --------------------- VERSION 2.0
-  createPopupElement() { //createInfoPopup
-    if (!document.getElementById('node-popup')) {
-      const popup = document.createElement('div');
-      popup.id = 'node-popup';
-      popup.style.position = 'absolute';
-      popup.style.padding = '10px';
-      popup.style.background = 'rgba(255, 255, 255, 0.9)';
-      popup.style.border = '1px solid #ccc';
-      popup.style.borderRadius = '8px';
-      popup.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-      popup.style.display = 'none';
-      popup.style.zIndex = '1000';
-      document.body.appendChild(popup);
-    }
-  }
-  
-  removePopupElement() {
-    const popup = document.getElementById('node-popup');
-    if (popup) {
-      document.body.removeChild(popup);
-    }
-  }
-
-  showPopup(node) {
-    let popup = document.getElementById('node-popup');
-    if (!popup) {
-      this.createPopupElement();
-      popup = document.getElementById('node-popup');
-      if (!popup) return;
-    }
-  
-    popup.innerHTML = ''; // Svuota il contenuto precedente
-    popup.style.display = 'block';
-  
-    // Titolo del pop-up
-    const title = document.createElement('h5');
-    title.textContent = `Node: ${node.id}`;
-    title.style.marginBottom = '8px';
-    popup.appendChild(title);
-  
-    // Campi del nodo da visualizzare
-    const fields = [
-      { key: 'id', label: 'ID', editable: false },
-      { key: 'name', label: 'Name', editable: true },
-      { key: 'group', label: 'Group', editable: true },
-      { key: 'x', label: 'X', editable: false },
-      { key: 'y', label: 'Y', editable: false },
-      { key: 'z', label: 'Z', editable: false },
-      { key: 'color', label: 'Color', editable: true }
-    ];
-  
-    fields.forEach(field => {
-      const fieldContainer = document.createElement('div');
-      fieldContainer.style.marginBottom = '6px';
-  
-      const label = document.createElement('label');
-      label.textContent = field.label;
-      label.style.marginRight = '8px';
-  
-      const input = document.createElement('input');
-      input.type = field.key === 'color' ? 'color' : 'text';
-      input.value = node[field.key];
-      input.style.width = field.key === 'color' ? '50px' : '100px';
-  
-      if (!field.editable) {
-        input.disabled = true;
-      } else {
-        input.oninput = () => {
-          node[field.key] =
-            field.key === 'group' || field.key === 'name'
-              ? input.value
-              : parseFloat(input.value) || input.value;
-          if (field.key === 'color') {
-            node.color = input.value;
-          }
-        };
-      }
-  
-      fieldContainer.appendChild(label);
-      fieldContainer.appendChild(input);
-      popup.appendChild(fieldContainer);
-    });
-  
-    // Posiziona il popup accanto al punto sopra il nodo
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    const nodePosition = new THREE.Vector3();
-    node.mesh.getWorldPosition(nodePosition);
-  
-    // Calcola la posizione del punto sopra il nodo
-    const popupHeight = 30; // Altezza sopra il nodo sull'asse Z
-    const popupPosition = nodePosition.clone();
-    popupPosition.z += popupHeight;
-  
-    // Proietta il punto sopra il nodo nello spazio dello schermo
-    popupPosition.project(this.camera);
-    const popupX = ((popupPosition.x + 1) / 2) * rect.width + rect.left;
-    const popupY = ((-popupPosition.y + 1) / 2) * rect.height + rect.top;
-  
-    popup.style.left = `${popupX}px`;
-    popup.style.top = `${popupY}px`;
-  
-    // Aggiungi una linea di connessione tra il nodo e il popup
-    this.addConnectionLine(nodePosition, popupHeight);
-  }
-  
-  addConnectionLine(nodePosition, popupHeight) {
-    // Rimuove eventuali linee di connessione esistenti
-    if (this.popupConnectionLine) {
-      this.scene.remove(this.popupConnectionLine);
-      this.popupConnectionLine.geometry.dispose();
-      this.popupConnectionLine.material.dispose();
-    }
-  
-    // Crea una linea di connessione
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(nodePosition.x, nodePosition.y, nodePosition.z),
-      new THREE.Vector3(nodePosition.x, nodePosition.y, nodePosition.z + popupHeight)
-    ]);
-  
-    this.popupConnectionLine = new THREE.Line(lineGeometry, lineMaterial);
-    this.scene.add(this.popupConnectionLine);
-  }
-  
-  hidePopup() {
-    const popup = document.getElementById('node-popup');
-    if (popup) {
-      popup.style.display = 'none';
-    }
-  
-    // Rimuovi la linea di connessione se esiste
-    if (this.popupConnectionLine) {
-      this.scene.remove(this.popupConnectionLine);
-      this.popupConnectionLine.geometry.dispose();
-      this.popupConnectionLine.material.dispose();
-      this.popupConnectionLine = null;
-    }
-  }
-
-  // 3.0
-  createInfoPopup(node) {
-    // Rimuovi eventuali popup o linee di connessione precedenti
-    if (this.nodeInfoPopUp) {
-        this.scene.remove(this.nodeInfoPopUp);
-    }
-    if (this.nodeToPopupLine) {
-        this.scene.remove(this.nodeToPopupLine);
-    }
-
-    // Dimensioni del canvas e fattore di scala per migliorare la qualità
-    const canvasWidth = 300; // Larghezza visibile del popup
-    const canvasHeight = 80; // Altezza visibile del popup
-    const scaleFactor = 5; // Fattore di scala per migliorare la risoluzione
-
-    // Crea un canvas ad alta risoluzione
-    const canvas = document.createElement('canvas');
-    canvas.width = canvasWidth * scaleFactor;
-    canvas.height = canvasHeight * scaleFactor;
-
-    const context = canvas.getContext('2d');
-    context.scale(scaleFactor, scaleFactor);
-
-    // Disegna il contorno nero e lo sfondo bianco
-    context.fillStyle = 'black'; // Contorno nero
-    context.fillRect(0, 0, canvasWidth, canvasHeight);
-    context.fillStyle = 'rgba(255, 255, 255, 0.9)'; // Sfondo bianco semitrasparente
-    context.fillRect(3, 3, canvasWidth - 6, canvasHeight - 6); // Margini interni
-
-    // Disegna i titoli e i valori con scalatura sull'asse X
-    context.fillStyle = 'black';
-    context.font = 'bold 16px Arial';
-    const fields = [
-        { label: 'ID', value: node.id },
-        { label: 'Name', value: node.name || 'N/A' },
-        { label: 'Group', value: node.group || 'N/A' }
-    ];
-
-    let yPosition = 20; // Posizione verticale iniziale
-
-    // Applica scalatura sull'asse X per il testo
-    context.save(); // Salva lo stato corrente del contesto
-    context.scale(1.5, 1); // Allarga il testo sull'asse X di 1.5 volte
-
-    fields.forEach(field => {
-        context.fillText(`${field.label}:`, 10 / 1.5, yPosition); // Dividi posizione X per lo scale X
-        context.fillText(`${field.value}`, 100 / 1.5, yPosition); // Dividi posizione X per lo scale X
-        yPosition += 20; // Incrementa la posizione per il campo successivo
-    });
-
-    context.restore(); // Ripristina lo stato del contesto
-
-    // Crea la texture dal canvas
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter; // Per evitare aliasing
-    texture.needsUpdate = true;
-
-    // Crea il materiale dello sprite
-    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-    const sprite = new THREE.Sprite(spriteMaterial);
-
-    // Posiziona il popup sopra il nodo
-    sprite.position.copy(node.mesh.position);
-    sprite.position.z += 20; // Altezza della linea di connessione
-
-    // Aggiungi il popup alla scena
-    this.nodeInfoPopUp = sprite;
-    this.scene.add(sprite);
-
-    // Crea la linea di connessione tra il nodo e il popup
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const points = [
-        new THREE.Vector3(node.mesh.position.x, node.mesh.position.y, node.mesh.position.z),
-        new THREE.Vector3(sprite.position.x, sprite.position.y, sprite.position.z)
-    ];
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-    const line = new THREE.Line(lineGeometry, lineMaterial);
-
-    // Aggiungi la linea alla scena
-    this.nodeToPopupLine = line;
-    this.scene.add(line);
-  }
-
-  showTestPopup(node) {
-    if (this.nodeInfoPopUp) {
-      this.scene.remove(this.nodeInfoPopUp);
-    }
-    this.createPopupElement(node);
-  }
-
-  hideTestPopup() {
-    if (this.nodeInfoPopUp) {
-        this.scene.remove(this.nodeInfoPopUp);
-        this.nodeInfoPopUp = null;
-    }
-    if (this.nodeToPopupLine) {
-      this.scene.remove(this.nodeToPopupLine);
-      this.nodeToPopupLine = null;
-    }
-  }
-
-  //4.0
+  //LAST VERSION - modifiable popUp info
   createPopupElement(nodeId) { 
     if (!document.getElementById(`node-popup-${nodeId}`)) {
       const popup = document.createElement('div');
@@ -738,23 +497,12 @@ class GraphInteractions {
       fieldContainer.appendChild(input);
       popup.appendChild(fieldContainer);
     });
-    // Posiziona il popup sempre in alto a destra
-    //popup.style.position = 'fixed';
-    //popup.style.right = '10px';
-    //popup.style.top = '10px';
-
-    // Posiziona il popup a destra
-    /*
-    popup.style.right = '10px';
-    popup.style.top = '50%';
-    popup.style.transform = 'translateY(-50%)';*/
 
     const baseTop = window.innerHeight * 0.3; // Punto di partenza in alto
-    //console.log("baseTop: ", baseTop);
     popup.style.right = '10px';
     popup.style.top = `${baseTop}px`;
 
-    const finalTop = baseTop; //this.findNonOverlappingPosition(popup, baseTop);
+    const finalTop = baseTop;
     popup.style.top = `${finalTop}px`;
 
     // Crea la linea DOM se non esiste
@@ -773,16 +521,13 @@ class GraphInteractions {
     this.positionPopup(popup);
 
     // Salva il riferimento per aggiornare la posizione
-    //this.currentPopup = { popup, line, node };
     this.activePopups.set(node.id, { popup, line, node });
 
     // Aggiorna la posizione iniziale della linea
-    //this.updateConnectionLine();
     this.updatePopupAndLine(node.id);
   }
 
   positionPopup(popup) {
-    //const occupiedPositions = []; // Array per tracciare le posizioni occupate
   
     // Ottieni la dimensione e posizione del popup
     const rect = popup.getBoundingClientRect();
