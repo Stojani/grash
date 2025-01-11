@@ -22,6 +22,7 @@ class GraphInteractions {
     this.lensRadius = 5;
     this.highlightedNodesInLens = [];
     this.activePopups = new Map();
+    this.popupPositions = [];
     this.initOrbitControls();
     this.addEventListeners();
   }
@@ -686,6 +687,7 @@ class GraphInteractions {
     if (!popup) {
         this.createPopupElement(node.id);
         popup = document.getElementById(`node-popup-${node.id}`);
+        popup.classList.add('node-popup');
     }
     //popup.innerHTML = ''; // Svuota il contenuto precedente
     popup.style.display = 'block';
@@ -697,7 +699,6 @@ class GraphInteractions {
     popup.appendChild(title);
     // Campi del nodo da visualizzare
     const fields = [
-      { key: 'id', label: 'ID', editable: false },
       { key: 'name', label: 'Name', editable: true },
       { key: 'group', label: 'Group', editable: true },
       { key: 'x', label: 'X', editable: false },
@@ -743,9 +744,18 @@ class GraphInteractions {
     //popup.style.top = '10px';
 
     // Posiziona il popup a destra
+    /*
     popup.style.right = '10px';
     popup.style.top = '50%';
-    popup.style.transform = 'translateY(-50%)';
+    popup.style.transform = 'translateY(-50%)';*/
+
+    const baseTop = window.innerHeight * 0.3; // Punto di partenza in alto
+    //console.log("baseTop: ", baseTop);
+    popup.style.right = '10px';
+    popup.style.top = `${baseTop}px`;
+
+    const finalTop = baseTop; //this.findNonOverlappingPosition(popup, baseTop);
+    popup.style.top = `${finalTop}px`;
 
     // Crea la linea DOM se non esiste
     let line = document.getElementById(`line-to-popup-${node.id}`);
@@ -759,6 +769,9 @@ class GraphInteractions {
         document.body.appendChild(line);
     }
 
+    // Calcola e assegna una posizione senza sovrapposizione
+    this.positionPopup(popup);
+
     // Salva il riferimento per aggiornare la posizione
     //this.currentPopup = { popup, line, node };
     this.activePopups.set(node.id, { popup, line, node });
@@ -768,41 +781,39 @@ class GraphInteractions {
     this.updatePopupAndLine(node.id);
   }
 
-  updateConnectionLine() {
-    if (!this.currentPopup) return;
+  positionPopup(popup) {
+    //const occupiedPositions = []; // Array per tracciare le posizioni occupate
   
-    const { popup, line, node } = this.currentPopup;
+    // Ottieni la dimensione e posizione del popup
+    const rect = popup.getBoundingClientRect();
+    const popupWidth = rect.width;
+    const popupHeight = rect.height;
   
-    // Ottieni il bounding rect del canvas di Three.js
-    const rect = this.renderer.domElement.getBoundingClientRect();
+    // Trova una posizione libera
+    let positionFound = false;
+    let offset = window.innerHeight * 0.3; // Offset per spostare il popup in caso di sovrapposizione
+    while (!positionFound) {
+      const potentialTop = `${offset}px`;
+      const potentialRight = '10px'; // Posizioniamo sempre a destra
   
-    // Ottieni la posizione 3D del nodo e proietta nello spazio dello schermo
-    const nodePosition = new THREE.Vector3();
-    node.mesh.getWorldPosition(nodePosition);
+      // Verifica se la posizione è occupata
+      const isOccupied = this.popupPositions.some(
+        ([top, right]) => top === potentialTop && right === potentialRight
+      );
   
-    // Calcola la posizione proiettata in 2D del nodo
-    const projectedNode = nodePosition.clone();
-    projectedNode.project(this.camera);
+      if (!isOccupied) {
+        // Posiziona il popup nella posizione trovata
+        popup.style.right = potentialRight;
+        popup.style.top = potentialTop;
+        popup.style.transform = 'translateY(-50%)';
   
-    const nodeScreenX = ((projectedNode.x + 1) / 2) * rect.width + rect.left;
-    const nodeScreenY = ((-projectedNode.y + 1) / 2) * rect.height + rect.top;
-  
-    // Ottieni la posizione del popup
-    const popupRect = popup.getBoundingClientRect();
-    const popupX = popupRect.left;
-    const popupY = popupRect.top + popupRect.height / 2;
-  
-    // Calcola la distanza e l'angolo tra i due punti
-    const deltaX = popupX - nodeScreenX;
-    const deltaY = popupY - nodeScreenY;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-  
-    // Posiziona la linea nel DOM
-    line.style.left = `${nodeScreenX}px`;
-    line.style.top = `${nodeScreenY}px`;
-    line.style.width = `${distance}px`;
-    line.style.transform = `rotate(${angle}deg)`;
+        // Aggiungi la posizione all'elenco delle posizioni occupate
+        this.popupPositions.push([potentialTop, potentialRight]);
+        positionFound = true;
+      } else {
+        offset += popupHeight + 10; // Sposta il popup in basso
+      }
+    }
   }
 
   updatePopupAndLine(nodeId) {
@@ -849,15 +860,23 @@ class GraphInteractions {
   
     const { popup, line } = entry;
   
-    // Rimuovi popup e linea dal DOM
-    document.body.removeChild(popup);
-    document.body.removeChild(line);
+    // Ottieni la posizione attuale del popup
+    const popupTop = popup.style.top;
+    const popupRight = popup.style.right;
   
-    // Rimuovi dalla mappa
+    // Rimuovi la posizione corrispondente da `popupPositions`
+    this.popupPositions = this.popupPositions.filter(
+      ([top, right]) => top !== popupTop || right !== popupRight
+    );
+  
+    // Rimuovi popup e linea dal DOM
+    if (popup) document.body.removeChild(popup);
+    if (line) document.body.removeChild(line);
+  
+    // Rimuovi dalla mappa dei popup attivi
     this.activePopups.delete(node.id);
   }
   
-
   oldHideFixedPopup(node) {
     const popup = document.getElementById(`node-popup-${node.id}`);
     const line = document.getElementById(`line-to-popup-${node.id}`);
@@ -1707,7 +1726,7 @@ class GraphInteractions {
 
     return { x, y };
   }
-
+  
   
 }
 

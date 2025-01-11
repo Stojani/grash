@@ -255,7 +255,7 @@ class Shaper {
 
     this.edges.forEach(edge => edge.updateGeometry());
 
-    if (this.simulation.alpha() < 0.02) {  // Soglia di stabilità della simulazione
+    if (this.simulation.alpha() < 0.03) {  // Soglia di stabilità della simulazione
       this.updateTabletSizeAfterSimulation();
       this.stopSimulation(); // Ferma la simulazione per evitare aggiornamenti continui
     }
