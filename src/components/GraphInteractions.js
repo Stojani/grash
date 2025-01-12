@@ -1345,7 +1345,7 @@ class GraphInteractions {
     if (this.lensEnabled) {
       const lens = document.getElementById('lens');
       if (lens) {
-        const offset = 80;
+        const offset = 0;
         const lensRadius = parseFloat(lens.style.width) / 2;
         //console.log("lens.style.width: "+ lens.style.width);
         //console.log("lensRadius: "+ lensRadius);
@@ -1383,8 +1383,10 @@ class GraphInteractions {
       if (distance <= lensRadius) {
           node.highlight();
           this.highlightedNodesInLens.push(node);
+          this.showLensPopup(node, mouseX, mouseY, lensRadius);
       } else {
           node.unhighlight('white');
+          this.hideLensPopup(node);
       }
     });
   }
@@ -1396,7 +1398,7 @@ class GraphInteractions {
       const isSourceHighlighted = highlightedNodeIds.includes(edge.source.id);
       const isTargetHighlighted = highlightedNodeIds.includes(edge.target.id);
 
-      if (isSourceHighlighted || isTargetHighlighted) { // case 2: use OR condition
+      if (isSourceHighlighted && isTargetHighlighted) { // case 1: only edges inside lens, use AND condition; case 2: use OR condition
         edge.highlight('red');
       } else {
         edge.unhighlight('white');
@@ -1460,6 +1462,79 @@ class GraphInteractions {
 
   showLensInfo(nodes) {
     //console.log("Nodes in Lens:", nodes.map(node => node.id));
+  }
+
+  showLensPopup(node, lensX, lensY, lensRadius) {
+    // Crea o recupera il popup
+    let popup = document.getElementById(`lens-popup-${node.id}`);
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.id = `lens-popup-${node.id}`;
+      popup.classList.add('node-popup');
+      document.body.appendChild(popup);
+    }
+  
+    // Aggiungi le informazioni al popup
+    popup.innerHTML = `
+      <div><strong>ID:</strong> ${node.id}</div>
+      <div><strong>Name:</strong> ${node.name || 'N/A'}</div>
+      <div><strong>Group:</strong> ${node.group || 'N/A'}</div>
+    `;
+  
+    // Ottieni la posizione dello schermo per il nodo
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const nodePosition = new THREE.Vector3();
+    node.mesh.getWorldPosition(nodePosition);
+    nodePosition.project(this.camera);
+  
+    const nodeScreenX = ((nodePosition.x + 1) / 2) * rect.width + rect.left;
+    const nodeScreenY = ((-nodePosition.y + 1) / 2) * rect.height + rect.top;
+  
+    // Calcola la posizione sul bordo della lente più vicina al nodo
+    const angle = Math.atan2(nodeScreenY - lensY, nodeScreenX - lensX);
+    const distanceFactor = 3; // Incrementa la distanza dal bordo della lente
+    const popupX = lensX + lensRadius * distanceFactor * Math.cos(angle);
+    const popupY = lensY + lensRadius * distanceFactor * Math.sin(angle);
+  
+    // Posiziona il popup
+    popup.style.left = `${popupX}px`;
+    popup.style.top = `${popupY}px`;
+    popup.style.display = 'block';
+  
+    // Crea o aggiorna la linea di connessione
+    this.updateLensConnectionLine(node, nodeScreenX, nodeScreenY, popupX, popupY);
+  }
+
+  hideLensPopup(node) {
+    const popup = document.getElementById(`lens-popup-${node.id}`);
+    const line = document.getElementById(`line-to-lens-popup-${node.id}`);
+    if (popup) popup.remove();
+    if (line) line.remove();
+  }
+
+  updateLensConnectionLine(node, nodeScreenX, nodeScreenY, popupX, popupY) {
+    let line = document.getElementById(`line-to-lens-popup-${node.id}`);
+    if (!line) {
+      line = document.createElement('div');
+      line.id = `line-to-lens-popup-${node.id}`;
+      line.style.position = 'absolute';
+      line.style.border = '1px solid black';
+      line.style.transformOrigin = 'top left';
+      line.style.zIndex = '999';
+      document.body.appendChild(line);
+    }
+  
+    // Calcola la distanza e l'angolo tra il nodo e il popup
+    const deltaX = popupX - nodeScreenX;
+    const deltaY = popupY - nodeScreenY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+  
+    // Posiziona e ruota la linea
+    line.style.left = `${nodeScreenX}px`;
+    line.style.top = `${nodeScreenY}px`;
+    line.style.width = `${distance}px`;
+    line.style.transform = `rotate(${angle}deg)`;
   }
 
   project3DToScreen(point3D, camera, renderer) {
