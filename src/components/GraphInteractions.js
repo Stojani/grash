@@ -23,23 +23,15 @@ class GraphInteractions {
     this.highlightedNodesInLens = [];
     this.activePopups = new Map();
     this.popupPositions = [];
+    this.exploreModeEnabled = true;
+    this.editModeEnabled = false;
+    this.analyticsModeEnabled = false;
     this.initOrbitControls();
     this.addEventListeners();
   }
 
   initOrbitControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    //this.controls.enableDamping = true;
-    //this.controls.dampingFactor = 0.25;
-    //this.controls.rotateSpeed = 0.3;
-    //this.controls.zoomSpeed = 0.9;
-    //this.controls.panSpeed = 0.8;
-    //this.controls.minPolarAngle = Math.PI / 4;
-    //this.controls.maxPolarAngle = Math.PI - Math.PI / 4;
-    //this.controls.minDistance = 1;
-    //this.controls.maxDistance = 1000;
-    //this.controls.enablePan = true;
-    //this.controls.screenSpacePanning = true;
   }
 
   addEventListeners() {
@@ -65,8 +57,10 @@ class GraphInteractions {
     if (nodeIntersects.length > 0) {
         const hoveredObject = nodeIntersects[0].object;
         this.highlightNode(hoveredObject);
+        this.showNodeTooltip(hoveredObject, event);
     } else {
         this.unhighlightNode();
+        this.hideNodeTooltip();
     }
 
     const edgeIntersects = this.raycaster.intersectObjects(this.edges.map(edge => edge.mesh), true);
@@ -458,12 +452,12 @@ class GraphInteractions {
     popup.appendChild(title);
     // Campi del nodo da visualizzare
     const fields = [
-      { key: 'name', label: 'Name', editable: true },
-      { key: 'group', label: 'Group', editable: true },
+      { key: 'name', label: 'Name', editable: this.editModeEnabled },
+      { key: 'group', label: 'Group', editable: this.editModeEnabled },
       { key: 'x', label: 'X', editable: false },
       { key: 'y', label: 'Y', editable: false },
       { key: 'z', label: 'Z', editable: false },
-      { key: 'color', label: 'Color', editable: true }
+      { key: 'color', label: 'Color', editable: this.editModeEnabled }
     ];
   
     fields.forEach(field => {
@@ -1316,29 +1310,32 @@ class GraphInteractions {
   }
 
   enableLensMode(radius = 10) {
-    this.lensEnabled = true;
-    this.lensRadius = radius;
-    this.setAllNodesColor('white');
-    this.setAllEdgesColor('white');
-    this.createLensElement(radius);
-
-    const lens = document.getElementById('lens');
-    lens.style.display = 'block';
-    this.highlightedNodesInLens = [];
-    document.addEventListener('mousemove', this.updateLensPosition.bind(this));
+    if (!this.lensEnabled) {
+      this.lensEnabled = true;
+      this.lensRadius = radius;
+      this.setAllNodesColor('white');
+      this.setAllEdgesColor('white');
+      this.createLensElement(radius);
+      const lens = document.getElementById('lens');
+      lens.style.display = 'block';
+      this.highlightedNodesInLens = [];
+      document.addEventListener('mousemove', this.updateLensPosition.bind(this));
+    }
   }
 
   disableLensMode() {
-    this.lensEnabled = false;
-    this.resetAllNodesColor();
-    this.resetAllEdgesColor();
-    const lens = document.getElementById('lens');
-    if (lens) {
-      lens.style.display = 'none';
+    if(this.lensEnabled) {
+      this.lensEnabled = false;
+      this.resetAllNodesColor();
+      this.resetAllEdgesColor();
+      const lens = document.getElementById('lens');
+      if (lens) {
+        lens.style.display = 'none';
+      }
+      this.highlightedNodesInLens = [];
+      document.removeEventListener('mousemove', this.updateLensPosition.bind(this));
+      //this.clearLensHighlights();
     }
-    this.highlightedNodesInLens = [];
-    document.removeEventListener('mousemove', this.updateLensPosition.bind(this));
-    //this.clearLensHighlights();
   }
 
   updateLensPosition(event) {
@@ -1546,8 +1543,63 @@ class GraphInteractions {
 
     return { x, y };
   }
-  
-  
+
+  enableExploreMode() {
+    this.exploreModeEnabled = true;
+    this.disableEditMode();
+    this.disableAnalyticsMode();
+  }
+
+  disableExploreMode() {
+    this.exploreModeEnabled = false;
+  }
+
+  enableEditMode() {
+    this.editModeEnabled = true;
+    this.disableExploreMode();
+    this.disableAnalyticsMode();
+  }
+
+  disableEditMode() {
+    this.editModeEnabled = false;
+  }
+
+  enableAnalyticsMode() {
+    this.analyticsModeEnabled = true;
+    this.disableExploreMode();
+    this.disableEditMode();
+  }
+
+  disableAnalyticsMode() {
+    this.analyticsModeEnabled = false;
+  }
+
+  showNodeTooltip(node, event) {
+    if (!this.nodeTooltip) {
+        this.nodeTooltip = document.createElement('div');
+        this.nodeTooltip.style.position = 'absolute';
+        this.nodeTooltip.style.padding = '5px 10px';
+        this.nodeTooltip.style.background = 'rgba(0, 0, 0, 0.75)';
+        this.nodeTooltip.style.color = 'white';
+        this.nodeTooltip.style.borderRadius = '4px';
+        this.nodeTooltip.style.pointerEvents = 'none';
+        this.nodeTooltip.style.fontSize = '12px';
+        this.nodeTooltip.style.zIndex = '1000';
+        document.body.appendChild(this.nodeTooltip);
+    }
+
+    this.nodeTooltip.textContent = `ID: ${this.hoveredNode.id}`;
+    this.nodeTooltip.style.left = `${event.clientX + 10}px`;
+    this.nodeTooltip.style.top = `${event.clientY + 10}px`;
+    this.nodeTooltip.style.display = 'block';
+  }
+
+  hideNodeTooltip() {
+      if (this.nodeTooltip) {
+          this.nodeTooltip.style.display = 'none';
+      }
+  }
+
 }
 
 export default GraphInteractions;
