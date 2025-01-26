@@ -1600,6 +1600,21 @@ class GraphInteractions {
       }
   }
 
+  resetSelectedNodes() {
+    this.selectedNodes.forEach(selectedNode => {
+        selectedNode.resetColor();
+        this.hideFixedPopup(selectedNode);
+    });
+    this.selectedNodes = [];
+  }
+
+  resetSelectedEdges() {
+    this.selectedEdges.forEach(selectedEdge => {
+        selectedEdge.resetColor();
+    });
+    this.selectedEdges = [];
+  }
+
 }
 
 export default GraphInteractions;

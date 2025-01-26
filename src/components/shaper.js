@@ -828,6 +828,10 @@ class Shaper {
     this.interactions.disableLensMode();
   }
 
+  resetSelectedElements() {
+    this.interactions.resetSelectedNodes();
+    this.interactions.resetSelectedEdges();
+  }
 
 }
 

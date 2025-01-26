@@ -1,6 +1,6 @@
 {
   "name": "grash",
-  "version": "1.0.386",
+  "version": "1.0.388",
   "description": "A useful library for 3D Graph Shaping",
   "main": "src/index.js",
   "dependencies": {
