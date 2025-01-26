@@ -1615,6 +1615,20 @@ class GraphInteractions {
     this.selectedEdges = [];
   }
 
+  searchAndSelectNodeById(nodeId) {
+    const targetNode = this.nodes.find(node => node._id === nodeId);
+    if (targetNode) {
+        const isAlreadySelected = this.selectedNodes.includes(targetNode);
+        if (!isAlreadySelected) {
+            this.selectNode(targetNode.mesh);
+            //return 1;
+        } else {
+        }
+    } else {
+        //return 0;
+    }
+  }
+
 }
 
 export default GraphInteractions;
