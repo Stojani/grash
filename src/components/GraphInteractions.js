@@ -18,6 +18,7 @@ class GraphInteractions {
     this.raycaster = new THREE.Raycaster();
     this.nodeInfoPopUp = null;
     this.flagShowNodePopUp = true;
+    this.flagNeighboursHighlight = false;
     this.lensEnabled = false;
     this.lensRadius = 5;
     this.highlightedNodesInLens = [];
@@ -55,12 +56,19 @@ class GraphInteractions {
 
     const nodeIntersects = this.raycaster.intersectObjects(this.nodes.map(node => node.mesh));
     if (nodeIntersects.length > 0) {
-        const hoveredObject = nodeIntersects[0].object;
-        this.highlightNode(hoveredObject);
-        this.showNodeTooltip(hoveredObject, event);
+      const hoveredObject = nodeIntersects[0].object;
+      this.highlightNode(hoveredObject);
+      this.showNodeTooltip(hoveredObject, event);
+      if (this.flagNeighboursHighlight) {
+        this.highlightNodeNeighbours(hoveredObject);
+      }
     } else {
-        this.unhighlightNode();
-        this.hideNodeTooltip();
+      if (this.flagNeighboursHighlight) {
+        this.unhighlightNodeNeighbours();
+      }
+      this.unhighlightNode();
+      this.hideNodeTooltip();
+        
     }
 
     const edgeIntersects = this.raycaster.intersectObjects(this.edges.map(edge => edge.mesh), true);
@@ -122,6 +130,27 @@ class GraphInteractions {
     }
   }
 
+  getNodeNeighbours(node) {
+    const neighbours = this.edges
+      .filter(edge => edge.source === node || edge.target === node)
+      .map(edge => (edge.source === node ? edge.target : edge.source));
+    return neighbours;
+  }
+
+  highlightNodeNeighbours(nodeMesh) {
+    if (this.hoveredNode) {
+      const neighbours = this.getNodeNeighbours(this.hoveredNode);
+      neighbours.forEach(neighbour => neighbour.hoverHighlight(0xff8000));//orange color
+    }
+  }
+
+  unhighlightNodeNeighbours() {
+    if (this.hoveredNode) {
+      const neighbours = this.getNodeNeighbours(this.hoveredNode);
+      neighbours.forEach(neighbour => neighbour.resetHoverHighlight());
+    }
+  }
+
   selectNode(nodeMesh) {
     const selectedNode = this.nodes.find(node => node.mesh === nodeMesh);
     if (selectedNode) {
@@ -132,7 +161,6 @@ class GraphInteractions {
           if (this.flagShowNodePopUp) {
             //this.showTestPopup(selectedNode);
             this.showFixedPopup(selectedNode);
-
           }
       } else {
           selectedNode.resetColor();
@@ -1627,6 +1655,14 @@ class GraphInteractions {
     } else {
         //return 0;
     }
+  }
+
+  enableNeighboursHighlight() {
+    this.flagNeighboursHighlight = true;
+  }
+
+  disableNeighboursHighlight() {
+    this.flagNeighboursHighlight = false;
   }
 
 }
