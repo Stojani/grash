@@ -833,6 +833,14 @@ class Shaper {
     this.interactions.resetSelectedEdges();
   }
 
+  extrudeAllNodesByDensity() {
+    this.interactions.extrudeAllNodesByDensity(this.graph.nodes);
+  }
+
+  resetAllNodesExtrusionByDensity() {
+    this.interactions.resetAllNodesExtrusionByDensity(this.graph.nodes);
+  }
+
 }
 
 export default Shaper;

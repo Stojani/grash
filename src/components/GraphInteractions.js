@@ -1276,6 +1276,23 @@ class GraphInteractions {
     this.resetEdgesExtrusion(edgesToReset);
   }
 
+  extrudeAllNodesByDensity(nodes) {
+    nodes.forEach(node => {
+      this.extrudeNodeAsMushroomWithStem(node, this.getNodeDensity(node));
+    });
+  }
+
+  resetAllNodesExtrusionByDensity(nodes) {
+    nodes.forEach(node => {
+      this.resetNodeExtrusion(node, this.getNodeDensity(node));
+    });
+  }
+
+  getNodeDensity(node) {
+    const neighbours = this.getNodeNeighbours(node);
+    return neighbours.length;
+  }
+
   enableShowNodePopUp() {
     this.flagShowNodePopUp = true;
   }
