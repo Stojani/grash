@@ -19,6 +19,7 @@ class GraphInteractions {
     this.nodeInfoPopUp = null;
     this.flagShowNodePopUp = true;
     this.flagNeighboursHighlight = false;
+    this.flagGroupNodesHighlight = false;
     this.lensEnabled = false;
     this.lensRadius = 5;
     this.highlightedNodesInLens = [];
@@ -61,10 +62,14 @@ class GraphInteractions {
       this.showNodeTooltip(hoveredObject, event);
       if (this.flagNeighboursHighlight) {
         this.highlightNodeNeighbours(hoveredObject);
+      } else if (this.flagGroupNodesHighlight) {
+        this.highlightGroupNodes(hoveredObject);
       }
     } else {
       if (this.flagNeighboursHighlight) {
         this.unhighlightNodeNeighbours();
+      } else if (this.flagGroupNodesHighlight) {
+        this.unhighlightGroupNodes();
       }
       this.unhighlightNode();
       this.hideNodeTooltip();
@@ -148,6 +153,20 @@ class GraphInteractions {
     if (this.hoveredNode) {
       const neighbours = this.getNodeNeighbours(this.hoveredNode);
       neighbours.forEach(neighbour => neighbour.resetHoverHighlight());
+    }
+  }
+
+  highlightGroupNodes(nodeMesh) { 
+    if (this.hoveredNode) {
+      const groupNodes = this.nodes.filter(node => node.group === this.hoveredNode.group);
+      groupNodes.forEach(node => node.hoverHighlight(0xff8000));//orange color
+    }
+  }
+
+  unhighlightGroupNodes() {
+    if (this.hoveredNode) {
+      const groupNodes = this.nodes.filter(node => node.group === this.hoveredNode.group);
+      groupNodes.forEach(node => node.resetHoverHighlight());
     }
   }
 
@@ -1680,6 +1699,14 @@ class GraphInteractions {
 
   disableNeighboursHighlight() {
     this.flagNeighboursHighlight = false;
+  }
+
+  enableGroupNodesHighlight() {
+    this.flagGroupNodesHighlight = true;
+  }
+
+  disableGroupNodesHighlight() {
+    this.flagGroupNodesHighlight = false;
   }
 
 }
