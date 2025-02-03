@@ -833,12 +833,12 @@ class Shaper {
     this.interactions.resetSelectedEdges();
   }
 
-  extrudeAllNodesByDensity() {
-    this.interactions.extrudeAllNodesByDensity(this.graph.nodes);
+  extrudeAllNodesbyDegree() {
+    this.interactions.extrudeAllNodesbyDegree(this.graph.nodes);
   }
 
-  resetAllNodesExtrusionByDensity() {
-    this.interactions.resetAllNodesExtrusionByDensity(this.graph.nodes);
+  resetAllNodesExtrusionbyDegree() {
+    this.interactions.resetAllNodesExtrusionbyDegree(this.graph.nodes);
   }
 
 }

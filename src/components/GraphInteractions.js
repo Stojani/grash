@@ -1295,19 +1295,19 @@ class GraphInteractions {
     this.resetEdgesExtrusion(edgesToReset);
   }
 
-  extrudeAllNodesByDensity(nodes) {
+  extrudeAllNodesbyDegree(nodes) {
     nodes.forEach(node => {
-      this.extrudeNodeAsMushroomWithStem(node, this.getNodeDensity(node));
+      this.extrudeNodeAsMushroomWithStem(node, this.getNodeDegree(node));
     });
   }
 
-  resetAllNodesExtrusionByDensity(nodes) {
+  resetAllNodesExtrusionbyDegree(nodes) {
     nodes.forEach(node => {
-      this.resetNodeExtrusion(node, this.getNodeDensity(node));
+      this.resetNodeExtrusion(node, this.getNodeDegree(node));
     });
   }
 
-  getNodeDensity(node) {
+  getNodeDegree(node) {
     const neighbours = this.getNodeNeighbours(node);
     return neighbours.length;
   }
