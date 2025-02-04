@@ -833,12 +833,26 @@ class Shaper {
     this.interactions.resetSelectedEdges();
   }
 
-  extrudeAllNodesbyDegree() {
-    this.interactions.extrudeAllNodesbyDegree(this.graph.nodes);
+  extrudeAllNodesByDegree() {
+    this.interactions.extrudeAllNodesByDegree(this.graph.nodes);
   }
 
-  resetAllNodesExtrusionbyDegree() {
-    this.interactions.resetAllNodesExtrusionbyDegree(this.graph.nodes);
+  resetAllNodesExtrusionByDegree() {
+    this.interactions.resetAllNodesExtrusionByDegree(this.graph.nodes);
+  }
+
+  extrudeNodesByDistance(maxHeight = 20, minHeight = 1) {
+    if (this.interactions.selectedNodes.length === 1) {
+      const selectedNode = this.interactions.selectedNodes[0];
+      this.interactions.extrudeNodesByDistance(selectedNode, 1, 5);
+    }  
+  }
+
+  resetNodesExtrusionByDistance(maxHeight = 20, minHeight = 1) {
+    if (this.interactions.selectedNodes.length === 1) {
+      const selectedNode = this.interactions.selectedNodes[0];
+      this.interactions.resetNodesExtrusionByDistance(selectedNode, 1, 5);
+    }
   }
 
 }

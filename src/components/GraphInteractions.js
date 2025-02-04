@@ -1295,13 +1295,13 @@ class GraphInteractions {
     this.resetEdgesExtrusion(edgesToReset);
   }
 
-  extrudeAllNodesbyDegree(nodes) {
+  extrudeAllNodesByDegree(nodes) {
     nodes.forEach(node => {
       this.extrudeNodeAsMushroomWithStem(node, this.getNodeDegree(node));
     });
   }
 
-  resetAllNodesExtrusionbyDegree(nodes) {
+  resetAllNodesExtrusionByDegree(nodes) {
     nodes.forEach(node => {
       this.resetNodeExtrusion(node, this.getNodeDegree(node));
     });
@@ -1707,6 +1707,64 @@ class GraphInteractions {
 
   disableGroupNodesHighlight() {
     this.flagGroupNodesHighlight = false;
+  }
+
+  extrudeNodesByDistance(selectedNode, baseHeight = 2, scaleFactor = 1.5) {
+    if (!selectedNode) return;
+
+    // Passo 1: Calcola le distanze minime dai nodi (Bellman-Ford o BFS)
+    const distances = this.computeNodeDistances(selectedNode);
+
+    // Trova la distanza massima per normalizzare i valori
+    const maxDistance = Math.max(...Object.values(distances)); 
+
+    this.nodes.forEach(node => {
+      if (distances[node.id] !== undefined) {
+        // Calcola l'altezza usando una funzione non lineare per enfatizzare le differenze
+        const height = baseHeight + (maxDistance - distances[node.id]) * scaleFactor;
+        // Estrude il nodo con l'altezza calcolata
+        this.extrudeNodeAsMushroomWithStem(node, height);
+      }
+    });
+  }
+
+  resetNodesExtrusionByDistance(selectedNode, baseHeight = 2, scaleFactor = 1.5) {
+    if (!selectedNode) return;
+
+    const distances = this.computeNodeDistances(selectedNode);
+    const maxDistance = Math.max(...Object.values(distances)); 
+
+    this.nodes.forEach(node => {
+      if (distances[node.id] !== undefined) {
+        const height = baseHeight + (maxDistance - distances[node.id]) * scaleFactor;
+        this.resetNodeExtrusion(node, height);
+      }
+    });
+  }
+
+  computeNodeDistances(selectedNode) {
+    const distances = {};
+    this.nodes.forEach(node => distances[node.id] = Infinity);
+    distances[selectedNode.id] = 0; // Il nodo selezionato ha distanza 0
+
+    let updated = true;
+    for (let i = 0; i < this.nodes.length - 1 && updated; i++) {
+      updated = false;
+      this.nodes.forEach(node => {
+        const nodeDistance = distances[node.id];
+        if (nodeDistance !== Infinity) {
+          const neighbors = this.getNodeNeighbours(node);
+          neighbors.forEach(neighbor => {
+            const newDistance = nodeDistance + 1; // Ogni arco pesa 1
+            if (newDistance < distances[neighbor.id]) {
+                distances[neighbor.id] = newDistance;
+                updated = true;
+            }
+          });
+        }
+      });
+    }
+    return distances;
   }
 
 }
