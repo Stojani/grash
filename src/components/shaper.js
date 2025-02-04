@@ -841,17 +841,17 @@ class Shaper {
     this.interactions.resetAllNodesExtrusionByDegree(this.graph.nodes);
   }
 
-  extrudeNodesByDistance(maxHeight = 20, minHeight = 1) {
+  extrudeNodesByDistance(baseHeight = 2, scaleFactor = 1.5) {
     if (this.interactions.selectedNodes.length === 1) {
       const selectedNode = this.interactions.selectedNodes[0];
-      this.interactions.extrudeNodesByDistance(selectedNode, 1, 5);
+      this.interactions.extrudeNodesByDistance(selectedNode, baseHeight, scaleFactor);
     }  
   }
 
-  resetNodesExtrusionByDistance(maxHeight = 20, minHeight = 1) {
+  resetNodesExtrusionByDistance(baseHeight = 2, scaleFactor = 1.5) {
     if (this.interactions.selectedNodes.length === 1) {
       const selectedNode = this.interactions.selectedNodes[0];
-      this.interactions.resetNodesExtrusionByDistance(selectedNode, 1, 5);
+      this.interactions.resetNodesExtrusionByDistance(selectedNode, baseHeight, scaleFactor);
     }
   }
 
