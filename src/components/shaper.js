@@ -541,8 +541,16 @@ class Shaper {
 
   removeSelectedNodes() {
     //this.stopSimulation();
-
     this.interactions.removeSelectedNodes();
+    this.nodes = this.interactions.nodes;
+    this.edges = this.interactions.edges;
+
+    this.updateGraphSimulation();
+  }
+
+  removeSelectedEdges() {
+    //this.stopSimulation();
+    this.interactions.removeSelectedEdges();
     this.nodes = this.interactions.nodes;
     this.edges = this.interactions.edges;
 

@@ -344,8 +344,8 @@ class GraphInteractions {
     this.controls.enablePan = false;
   }
 
-  removeNode(nodeMesh) {
-    const nodeToRemove = this.nodes.find(node => node.mesh === nodeMesh);
+  removeNode(nodeToRemove) {
+    //const nodeToRemove = this.nodes.find(node => node.mesh === nodeMesh);
     if (nodeToRemove) {
       const edgesToRemove = this.edges.filter(edge => edge.source === nodeToRemove || edge.target === nodeToRemove);
   
@@ -371,15 +371,44 @@ class GraphInteractions {
       if (this.hoveredNode === nodeToRemove) {
         this.hoveredNode = null;
       }
+
+      // Hide the associated popup
+      this.hideFixedPopup(nodeToRemove);
+    }
+  }
+
+  removeEdge(edgeToRemove) {
+    //const edgeToRemove = this.edges.find(edge => edge.mesh === edgeMesh);
+    if (edgeToRemove) {
+      if (edgeToRemove.mesh && edgeToRemove.mesh.parent) {
+        edgeToRemove.mesh.parent.remove(edgeToRemove.mesh);
+        edgeToRemove.mesh.geometry.dispose();
+        edgeToRemove.mesh.material.dispose();
+      }
+  
+      this.edges = this.edges.filter(edge => edge !== edgeToRemove);
+  
+      this.selectedEdges = this.selectedEdges.filter(edge => edge !== edgeToRemove);
+      if (this.hoveredEdge === edgeToRemove) {
+        this.hoveredEdge = null;
+      }
     }
   }
 
   removeSelectedNodes() {
     const nodesToRemove = [...this.selectedNodes];
     nodesToRemove.forEach(node => {
-      this.removeNode(node.mesh);
+      this.removeNode(node);
     });
     this.selectedNodes = [];
+  }
+
+  removeSelectedEdges() {
+    const edgesToRemove = [...this.selectedEdges];
+    edgesToRemove.forEach(edge => {
+      this.removeEdge(edge);
+    });
+    this.selectedEdges = [];
   }
 
   removeExistingPopUpInfo() {
