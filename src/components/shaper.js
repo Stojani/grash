@@ -449,6 +449,18 @@ class Shaper {
     this.camera.updateProjectionMatrix();
   }
 
+  set2DCameraSettings(distance = 50) {
+    if (!this.camera) return;
+    this.camera.position.set(0, 0, distance);
+    this.camera.fov = 50;
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight;
+    this.camera.aspect = containerWidth / containerHeight;
+    this.camera.near = 0.1;
+    this.camera.far = 2000;
+    this.camera.updateProjectionMatrix();
+  }
+
   resetCameraSettings(distance = 50) {
     if (!this.camera) return;
     this.camera.position.set(0, -distance, distance);
