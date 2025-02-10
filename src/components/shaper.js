@@ -504,8 +504,10 @@ class Shaper {
 
   destroy() {
     // Rimuovi gli oggetti dalla scena
-    while(this.scene.children.length > 0){ 
-      this.scene.remove(this.scene.children[0]); 
+    if (this.scene?.children) {
+      while(this.scene.children.length > 0){ 
+        this.scene.remove(this.scene.children[0]); 
+      }
     }
 
     // Annulla l'animazione
@@ -521,15 +523,19 @@ class Shaper {
     }
 
     // Rimuovi popUp esistenti
-    if (this.interactions.selectedNodes) {
+    if (this.interactions?.selectedNodes) {
       this.interactions.removeExistingPopUpInfo();
     }
 
     // Rimuovi il renderer dal DOM
-    this.container.removeChild(this.renderer.domElement);
-
+    if (this.container && this.renderer?.domElement) {
+      this.container.removeChild(this.renderer.domElement);
+    }
+    
     // Rilascia le risorse di Three.js
-    this.renderer.dispose();
+    if(this.renderer) {
+      this.renderer.dispose();
+    }
 
     // Imposta a null le proprietà per il garbage collection
     this.scene = null;
