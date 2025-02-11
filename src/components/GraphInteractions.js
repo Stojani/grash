@@ -760,7 +760,7 @@ class GraphInteractions {
   }
 
   //NODES EXTRUSION
-  extrudeNodeAsMushroomWithStem(node, extrusionHeight = 0.5, duration = 2000) {
+  extrudeNodeAsMushroomWithStem(node, extrusionHeight = 0.5, duration = 2000, stemColor = '#999999') {
     const initialZ = node.mesh.position.z;
     const startTime = performance.now();
   
@@ -769,7 +769,7 @@ class GraphInteractions {
   
     const height = Math.abs(extrusionHeight - initialZ);
     const stemGeometry = new THREE.CylinderGeometry(topRadius, baseRadius,  height, 32);
-    const stemMaterial = new THREE.MeshStandardMaterial({ color: '#999999', transparent: true, opacity: 0.8 });
+    const stemMaterial = new THREE.MeshStandardMaterial({ color: stemColor, transparent: true, opacity: 0.8 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
     stem.rotation.x = Math.PI / 2;
     stem.position.set(node.mesh.position.x, node.mesh.position.y, initialZ);
@@ -1738,61 +1738,92 @@ class GraphInteractions {
     this.flagGroupNodesHighlight = false;
   }
 
-  extrudeNodesByDistance(selectedNode, baseHeight = 2, scaleFactor = 1.5) {
+  extrudeNodesByDistance(selectedNode, baseHeight = 2, scaleFactor = 1.5, multicolor = false, useWeight = true) {
     if (!selectedNode) return;
 
-    // Passo 1: Calcola le distanze minime dai nodi (Bellman-Ford o BFS)
-    const distances = this.computeNodeDistances(selectedNode);
+    const distances = this.computeNodeDistances(selectedNode, useWeight);
+    const finiteDistances = Object.values(distances).filter(d => d !== Infinity);
 
-    // Trova la distanza massima per normalizzare i valori
-    const maxDistance = Math.max(...Object.values(distances)); 
+    if (finiteDistances.length === 0) return; // Nessun nodo connesso
+
+    const maxDistance = Math.max(...finiteDistances); 
 
     this.nodes.forEach(node => {
-      if (distances[node.id] !== undefined) {
-        // Calcola l'altezza usando una funzione non lineare per enfatizzare le differenze
-        const height = baseHeight + (maxDistance - distances[node.id]) * scaleFactor;
-        // Estrude il nodo con l'altezza calcolata
-        this.extrudeNodeAsMushroomWithStem(node, height);
-      }
+        if (distances[node.id] !== Infinity) {
+            const height = baseHeight + (maxDistance - distances[node.id]) * scaleFactor;
+            this.extrudeNodeAsMushroomWithStem(node, height, undefined, multicolor ? this.getColorByHeight(height, maxDistance*scaleFactor + baseHeight) : undefined);
+        }
     });
   }
 
-  resetNodesExtrusionByDistance(selectedNode, baseHeight = 2, scaleFactor = 1.5) {
+  getColorByHeight(height, maxHeight = 10) {
+    const normalized = Math.min(height / maxHeight, 1);
+  
+    const hue = 0.66 * (1 - normalized);
+  
+    const color = new THREE.Color();
+    color.setHSL(hue, 1, 0.5);
+    return color;
+  }
+
+  resetNodesExtrusionByDistance(selectedNode, baseHeight = 2, scaleFactor = 1.5, useWeight = true) {
     if (!selectedNode) return;
 
-    const distances = this.computeNodeDistances(selectedNode);
-    const maxDistance = Math.max(...Object.values(distances)); 
+    const distances = this.computeNodeDistances(selectedNode, useWeight);
+    const finiteDistances = Object.values(distances).filter(d => d !== Infinity);
+
+    if (finiteDistances.length === 0) return;
+
+    const maxDistance = Math.max(...finiteDistances);
 
     this.nodes.forEach(node => {
-      if (distances[node.id] !== undefined) {
-        const height = baseHeight + (maxDistance - distances[node.id]) * scaleFactor;
-        this.resetNodeExtrusion(node, height);
-      }
+        if (distances[node.id] !== Infinity) {
+            const height = baseHeight + (maxDistance - distances[node.id]) * scaleFactor;
+            this.resetNodeExtrusion(node, height);
+        }
     });
   }
 
-  computeNodeDistances(selectedNode) {
+  computeNodeDistances(selectedNode, useWeight = true) {
     const distances = {};
-    this.nodes.forEach(node => distances[node.id] = Infinity);
-    distances[selectedNode.id] = 0; // Il nodo selezionato ha distanza 0
+    const visited = new Set();
+    const priorityQueue = new Map();
 
-    let updated = true;
-    for (let i = 0; i < this.nodes.length - 1 && updated; i++) {
-      updated = false;
-      this.nodes.forEach(node => {
-        const nodeDistance = distances[node.id];
-        if (nodeDistance !== Infinity) {
-          const neighbors = this.getNodeNeighbours(node);
-          neighbors.forEach(neighbor => {
-            const newDistance = nodeDistance + 1; // Ogni arco pesa 1
-            if (newDistance < distances[neighbor.id]) {
-                distances[neighbor.id] = newDistance;
-                updated = true;
-            }
-          });
+    this.nodes.forEach(node => {
+        distances[node.id] = Infinity;
+        priorityQueue.set(node.id, Infinity);
+    });
+    distances[selectedNode.id] = 0;
+    priorityQueue.set(selectedNode.id, 0);
+
+    while (priorityQueue.size > 0) {
+      const [currentNodeId] = [...priorityQueue.entries()].reduce((min, curr) => curr[1] < min[1] ? curr : min);
+      const currentNode = this.nodes.find(node => node.id === currentNodeId);
+
+      if (!currentNode) break;
+      priorityQueue.delete(currentNodeId);
+      visited.add(currentNodeId);
+
+      const neighbors = this.getNodeNeighbours(currentNode);
+      neighbors.forEach(neighbor => {
+        if (!visited.has(neighbor.id)) {
+          let edgeWeight = 1;
+          if(useWeight){
+            const edge = this.edges.find(e => (e.source.id === currentNode.id && e.target.id === neighbor.id) || 
+                                              (e.source.id === neighbor.id && e.target.id === currentNode.id));
+            
+            edgeWeight = edge ? edge.weight || 1 : 1;
+          }
+          
+          const newDistance = distances[currentNodeId] + edgeWeight;
+          if (newDistance < distances[neighbor.id]) {
+              distances[neighbor.id] = newDistance;
+              priorityQueue.set(neighbor.id, newDistance);
+          }
         }
       });
     }
+
     return distances;
   }
 
