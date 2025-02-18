@@ -828,6 +828,26 @@ class Shaper {
     edge.mesh.material.color.set(color);
   }
 
+  colorEdgesByWeight() {
+    const weights = this.edges.map(edge => edge.weight);
+    if (weights.length === 0) return;
+  
+    const minWeight = Math.min(...weights);
+    const maxWeight = Math.max(...weights);
+    const weightRange = maxWeight - minWeight || 1;
+  
+    this.edges.forEach(edge => {
+      const normalized = (edge.weight - minWeight) / weightRange;
+  
+      const color = new THREE.Color();
+      color.setHSL((1 - normalized) * 0.66, 1, 0.5);
+  
+      edge.mesh.material.color.set(color);
+  
+      //edge.originalColor = color.getStyle();
+    });
+  }
+
   resetAllEdgesColors() {
     this.edges.forEach(edge => {
       edge.mesh.material.color.set(edge.originalColor);

@@ -20,6 +20,7 @@ class GraphInteractions {
     this.flagShowNodePopUp = true;
     this.flagNeighboursHighlight = false;
     this.flagGroupNodesHighlight = false;
+    this.flagNodeEdgesHighlight = false;
     this.lensEnabled = false;
     this.lensRadius = 5;
     this.highlightedNodesInLens = [];
@@ -65,11 +66,17 @@ class GraphInteractions {
       } else if (this.flagGroupNodesHighlight) {
         this.highlightGroupNodes(hoveredObject);
       }
+      if (this.flagNodeEdgesHighlight) {
+        this.highlightNodeEdges(hoveredObject);
+      }
     } else {
       if (this.flagNeighboursHighlight) {
         this.unhighlightNodeNeighbours();
       } else if (this.flagGroupNodesHighlight) {
         this.unhighlightGroupNodes();
+      }
+      if (this.flagNodeEdgesHighlight) {
+        this.unhighlightNodeEdges();
       }
       this.unhighlightNode();
       this.hideNodeTooltip();
@@ -167,6 +174,20 @@ class GraphInteractions {
     if (this.hoveredNode) {
       const groupNodes = this.nodes.filter(node => node.group === this.hoveredNode.group);
       groupNodes.forEach(node => node.resetHoverHighlight());
+    }
+  }
+
+  highlightNodeEdges(nodeMesh) {
+    if (this.hoveredNode) {
+      const edges = this.edges.filter(edge => edge.source === this.hoveredNode || edge.target === this.hoveredNode);
+      edges.forEach(edge => edge.highlight('#FFD700'));
+    }
+  }
+
+  unhighlightNodeEdges() {
+    if (this.hoveredNode) {
+      const edges = this.edges.filter(edge => edge.source === this.hoveredNode || edge.target === this.hoveredNode);
+      edges.forEach(edge => edge.resetColor());
     }
   }
 
@@ -1736,6 +1757,14 @@ class GraphInteractions {
 
   disableGroupNodesHighlight() {
     this.flagGroupNodesHighlight = false;
+  }
+
+  enableNodeEdgesHighlight() {
+    this.flagNodeEdgesHighlight = true;
+  }
+
+  disableNodeEdgesHighlight() {
+    this.flagNodeEdgesHighlight = false;
   }
 
   extrudeNodesByDistance(selectedNode, baseHeight = 2, scaleFactor = 1.5, multicolor = false, useWeight = true) {
