@@ -1501,17 +1501,27 @@ class GraphInteractions {
     });
   }
 
-  updateEdgesInsideLens() {
+  updateEdgesInsideLens(extendedMode = false) {
     const highlightedNodeIds = this.highlightedNodesInLens.map(node => node.id);
 
     this.edges.forEach(edge => {
       const isSourceHighlighted = highlightedNodeIds.includes(edge.source.id);
       const isTargetHighlighted = highlightedNodeIds.includes(edge.target.id);
 
-      if (isSourceHighlighted && isTargetHighlighted) { // case 1: only edges inside lens, use AND condition; case 2: use OR condition
-        edge.highlight('red');
+      if (extendedMode) {
+        //case 1: edges starting/ending inside lens, use OR condition
+        if (isSourceHighlighted || isTargetHighlighted) {
+          edge.highlight('red');
+        } else {
+          edge.unhighlight('white');
+        }
       } else {
-        edge.unhighlight('white');
+        //case 2: only edges inside lens, use AND condition
+        if (isSourceHighlighted && isTargetHighlighted) {
+          edge.highlight('red');
+        } else {
+          edge.unhighlight('white');
+        }
       }
     });
   }
