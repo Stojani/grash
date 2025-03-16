@@ -780,13 +780,18 @@ class GraphInteractions {
     node.mesh.material.color.set(node.originalColor || node.color);
   }
 
+  getNodeGeometryBase(node) {
+    return node._geometry.parameters.radius || node._geometry.parameters.width;
+  }
+
   //NODES EXTRUSION
   extrudeNodeAsMushroomWithStem(node, extrusionHeight = 0.5, duration = 2000, stemColor = '#999999') {
     const initialZ = node.mesh.position.z;
     const startTime = performance.now();
   
-    const baseRadius = 0.3;
-    const topRadius = 0.15;
+    const nodeBase = this.getNodeGeometryBase(node);
+    const baseRadius = nodeBase;
+    const topRadius = nodeBase / 2;
   
     const height = Math.abs(extrusionHeight - initialZ);
     const stemGeometry = new THREE.CylinderGeometry(topRadius, baseRadius,  height, 32);
@@ -1423,12 +1428,12 @@ class GraphInteractions {
     }
   }
 
-  enableLensMode(radius = 10) {
+  enableLensMode(radius = 10, unfocusedColor = 'white') {
     if (!this.lensEnabled) {
       this.lensEnabled = true;
       this.lensRadius = radius;
-      this.setAllNodesColor('white');
-      this.setAllEdgesColor('white');
+      this.setAllNodesColor(unfocusedColor);
+      this.setAllEdgesColor(unfocusedColor);
       this.createLensElement(radius);
       const lens = document.getElementById('lens');
       lens.style.display = 'block';
@@ -1458,14 +1463,8 @@ class GraphInteractions {
       if (lens) {
         const offset = 0;
         const lensRadius = parseFloat(lens.style.width) / 2;
-        //console.log("lens.style.width: "+ lens.style.width);
-        //console.log("lensRadius: "+ lensRadius);
         lens.style.left = `${event.clientX}px`;
         lens.style.top = `${event.clientY + offset}px`;
-        //console.log("lens.style.left: "+ lens.style.left);
-        //console.log("lens.style.top: "+  lens.style.top);
-        //console.log("mouseX: "+ event.clientX);
-        //console.log("mouseY: "+  event.clientY);
 
         // Aggiorna nodi e archi nella lente
         this.updateNodesInsideLens(event.clientX, event.clientY, lensRadius);
