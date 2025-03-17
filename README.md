@@ -1,5 +1,5 @@
 # Grash
-A useful library for 3D Graph Shaping
+A useful library for 2.5D Graph Shaping
 
 GraSh Demo in Angular is available at -> https://stojani.github.io/angular_demo/
 
